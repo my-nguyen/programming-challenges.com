@@ -1,4 +1,3 @@
-import java.io.*;
 import java.util.*;
 
 // simulate a C-like struct
@@ -29,7 +28,7 @@ class skiena_1_6_1
   }
 
   // this method reads input and returns a list of pairs of lower and upper bounds
-  static List<bound_t> input() throws FileNotFoundException
+  static List<bound_t> input()
   {
     List<bound_t> list = new ArrayList<>();
     Scanner scanner = new Scanner(System.in);
@@ -67,7 +66,7 @@ class skiena_1_6_1
     }
   }
 
-  public static void main(String[] args) throws FileNotFoundException
+  public static void main(String[] args)
   {
     List<bound_t> list = input();
     process(list);
