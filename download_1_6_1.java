@@ -1,7 +1,7 @@
 // copied from helvidios.blogspot.com
 import java.io.*;
  
-public class down_1_6_1
+public class download_1_6_1
 {
    public static void main(String[] args) throws IOException
    {
