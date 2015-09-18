@@ -61,7 +61,7 @@ void process(bound_t* list, int size)
 
 void main()
 {
-  bound_t list[20];
+  bound_t list[100];
   int size;
   input(list, &size);
   process(list, size);
