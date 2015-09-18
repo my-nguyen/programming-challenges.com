@@ -21,7 +21,7 @@ class skiena_1_6_3
         for (int i = 0; i < count; i++)
         {
           float expense = scanner.nextFloat();
-          expenses.data.add(expense);
+          expenses.add(expense);
         }
 
         list.add(expenses);
@@ -38,7 +38,6 @@ class skiena_1_6_3
       // sort all the expenses, to facilitate calculating the average and the
       // exchange amount per student
       expenses.sort();
-
       // print output in the format required
       System.out.printf("$%.2f\n", expenses.exchange());
     }
@@ -54,6 +53,11 @@ class skiena_1_6_3
 class Expenses
 {
   public List<Float> data = new ArrayList<>();
+
+  public void add(float expense)
+  {
+    data.add(expense);
+  }
 
   public void sort()
   {
@@ -83,8 +87,11 @@ class Expenses
   {
     float total = 0.0f;
     float avg = average();
-    for (int i = 0; i < data.size() && data.get(i) < avg; i++)
-      total += avg - data.get(i);
+    for (float expense : data)
+      if (expense >= avg)
+        break;
+      else
+        total += avg - expense;
     return total;
   }
 }
