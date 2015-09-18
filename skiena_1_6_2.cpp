@@ -3,7 +3,22 @@
 #include <string>
 using namespace std;
 
-class input_t
+class base_t
+{
+protected:
+  friend ostream& operator<<(ostream& out, base_t& base);
+
+  vector<string> data;
+};
+
+ostream& operator<<(ostream& out, base_t& base)
+{
+  for (vector<string>::iterator it = base.data.begin(); it != base.data.end(); it++)
+    cout << *it << endl;
+  return out;
+}
+
+class input_t : public base_t
 {
   friend class output_t;
 
@@ -11,29 +26,10 @@ public:
   input_t(const vector<string>& data);
 
 private:
-  void printdata();
-  void print_internal();
+  void print_original();
   string blanks(int size);
   int mined(char value) const;
   int mine_total(int i, int j) const;
-
-private:
-  // data has 2 more lines and 2 more columns than the actual number of
-  // lines and columns read from input file. The extra lines and columns will
-  // be initialized to '+'. This serves to facilitate calculating the number
-  // of mines in the surrounding cells of any particular cell. So, if the
-  // input_t from input file is:
-  //		*...
-  //		....
-  //		.*..
-  //		....
-  // Then the internal data input_t looks something like this:
-  //		++++++
-  //		+*...+
-  //		+....+
-  //		+.*..+
-  //		++++++
-  vector<string> data;
 };
 
 // this method creates a new string having the desired length, and padd the
@@ -61,7 +57,7 @@ input_t::input_t(const vector<string>& list)
 
 // this method prints only the input_t contained within the surrounding cells
 // containing '+'
-void input_t::printdata()
+void input_t::print_original()
 {
   for (int i = 1; i < data.size()-1; i++)
   {
@@ -69,13 +65,6 @@ void input_t::printdata()
       cout << data[i][j];
     cout << endl;
   }
-}
-
-// this method prints everything in data
-void input_t::print_internal()
-{
-  for (vector<string>::iterator it = data.begin(); it != data.end(); it++)
-    cout << *it << endl;
 }
 
 // this method returns whether this cell contain a mine
@@ -97,17 +86,10 @@ int input_t::mine_total(int i, int j) const
          mined(data[i+1][j+1]);
 }
 
-class output_t
+class output_t : public base_t
 {
 public:
   output_t(const input_t& input);
-  friend ostream& operator<<(ostream& out, output_t& field);
-
-private:
-  // data contains the mine indicia as well as the calculated value of each
-  // of the cell in the input_t. This doesn't need the special extra 2 lines and 2
-  // columns, as opposed to data
-  vector<string> data;
 };
 
 // this method builds the internal data input_t, by recording the mines where
@@ -128,21 +110,11 @@ output_t::output_t(const input_t& input)
       // otherwise, calculate the number of mines in the surrounding 8 cells
       // and record that number in the output cell
       else
-      {
         builder += '0' + input.mine_total(i, j);
-      }
     }
     // retain the string
     data.push_back(builder);
   }
-}
-
-// this method prints everything in data
-ostream& operator<<(ostream& out, output_t& field)
-{
-  for (vector<string>::const_iterator it = field.data.begin(); it != field.data.end(); it++)
-    out << *it << endl;
-  return out;
 }
 
 // this method reads data from STDIN. The first line of each input_t contains 2
