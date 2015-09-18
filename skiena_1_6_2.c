@@ -36,9 +36,11 @@ char* blanks(int size)
 }
 
 // this constructor initializes internal data from a list of strings
+#define MAX_ROW 100
 #define MAX_COLUMN 100
-void fi_init_input(field_t* field, int row, int column, char** list)
+void fi_init_input(field_t* field, int row, int column, char list[][MAX_COLUMN])
 {
+// ("inside fi_init_input() field: %p\n", field);
   field->row_count = row + 2;
   field->column_count = column + 2;
   field->data = malloc(field->row_count * sizeof(char*));
@@ -65,8 +67,8 @@ void fi_init_input(field_t* field, int row, int column, char** list)
 void fi_init_output(field_t* output, field_t* input)
 {
   // remember: input has 2 extra lines
-  output->data = malloc((input->row_count-2) * sizeof(char*));
   output->row_count = input->row_count - 2;
+  output->data = malloc(output->row_count * sizeof(char*));
 
   int i;
   for (i = 1; i < input->row_count-1; i++)
@@ -148,7 +150,7 @@ int fi_mine_total(field_t* field, int i, int j)
 // of the next n lines contains exactly m characters, representing the input_t.
 // Safe squares are denoted by "." and mine squares by "*". The first input_t
 // line where n = m = 0 represents the end of input and should not be processed.
-void input(field_t* list[], int* size)
+void input(field_t list[], int* size)
 {
   *size = 0;
   while (1)
@@ -165,23 +167,19 @@ void input(field_t* list[], int* size)
       break;
     else
     {
-      char** lines = malloc(line_count * sizeof(char*));
+      char lines[MAX_ROW][MAX_COLUMN];
       // read the next line_count lines
       int i;
       for (i = 0; i < line_count; i++)
       {
         // allocate 1 extra character to accommodate the \n character from fgets()
-        char* line = malloc(column_count + 2);
-        fgets(line, column_count+2, stdin);
+        fgets(lines[i], column_count+2, stdin);
         // throw away the \n character
-        line[column_count] = '\0';
-        lines[i] = line;
+        lines[i][column_count] = '\0';
       }
 
       // create and retain a field of lines
-      field_t* field = malloc(sizeof(field));
-      fi_init_input(field, line_count, column_count, lines);
-      list[*size] = field;
+      fi_init_input(list + *size, line_count, column_count, lines);
       *size += 1;
     }
   }
@@ -190,7 +188,7 @@ void input(field_t* list[], int* size)
 // this method sweeps thru a list of fields; for each field it prints out the
 // mine cells as well as cells which contain the total number of mines in
 // the surrounding 8 cells
-void output(field_t* list[], int size)
+void output(field_t list[], int size)
 {
   // use traditional for loop instead of the advanced for loop because index
   // is needed in printing
@@ -200,24 +198,24 @@ void output(field_t* list[], int size)
     // for each cell in the input_t, sweep the surrounding cells for mines and
     // store the number of mines in the cell
     field_t out;
-    fi_init_output(&out, list[i]);
+    fi_init_output(&out, list+i);
 
     // print output in the format required
     printf("\n");
     printf("Field #%d:\n", i+1);
-    char string[MAX_COLUMN];
+    char string[MAX_ROW*MAX_COLUMN];
     printf("%s", fi_tostring(&out, string));
 
-    fi_destructor(list[i]);
+    fi_destructor(list+i);
     fi_destructor(&out);
   }
 }
 
-// assume for now maximum of 10 test fields
-#define MAX_FIELD 10
+// assume for now maximum of 100 test fields
+#define MAX_FIELD 100
 void main()
 {
-  field_t* list[MAX_FIELD];
+  field_t list[MAX_FIELD];
   int size;
   input(list, &size);
   output(list, size);
