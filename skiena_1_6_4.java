@@ -2,343 +2,342 @@ import java.util.*;
 
 class LCD
 {
-  // the size based on which to print a digit, with number of columns = base+2,
-  // and number of rows = 2*base + 3
-  int base;
+  // the size based on which to print a digit, with number of columns = size+2,
+  // and number of rows = 2*size + 3
+  int size;
   // a string of all digits, e.g. "12345", or "67890"
   String digits;
 
+  // array of Print's, each in charge of returning one character based on the
+  // row, column, digit (array index) and size
+  static Print[] prints = null;
+  static
+  {
+    prints = new Print[10];
+
+    // prints[0], which is Print0 is in charge of printing letter '0', etc
+    prints[0] = new Print0();
+    prints[1] = new Print1();
+    prints[2] = new Print2();
+    prints[3] = new Print3();
+    prints[4] = new Print4();
+    prints[5] = new Print5();
+    prints[6] = new Print6();
+    prints[7] = new Print7();
+    prints[8] = new Print8();
+    prints[9] = new Print9();
+  }
+
+  // due to the problem requirements, a string of digits (which is a number),
+  // is printed as follows: at each row, print all the characters that form a
+  // digit at that row, followed by a blank, then repeat the process for others.
+  // For example, the string 84 of size 3 would be printed as:
+  // at row 0: " ---       "
+  // at row 1: "|   | |   |"
+  // at row 2: "|   | |   |"
+  // at row 3: "|   | |   |"
+  // at row 4: " ---   --- "
+  // at row 5: "|   |     |"
+  // at row 6: "|   |     |"
+  // at row 7: "|   |     |"
+  // at row 8: " ---       "
+  // note how this satisfies the requirement of size + 2 columns and 2size + 3 rows
   public String toString()
   {
-    Printer printer = new Printer();
+    StringBuilder builder = new StringBuilder();
 
-    for (int row = 0; row < 2*base+3; row++)
+    // print row by row
+    for (int row = 0; row < 2*size+3; row++)
     {
-      // print all digits
+      // print all digits in each row
       for (int i = 0; i < digits.length(); i++)
       {
-        String tmp = printer.builder.toString();
         // blank column after each digit
         if (i != 0)
-          printer.builder.append(" ");
+          builder.append(" ");
 
         // for each digit
-        for (int column = 0; column < base+2; column++)
+        for (int column = 0; column < size+2; column++)
         {
           // convert each digit from char to int
           int digit = Character.getNumericValue(digits.charAt(i));
-          // using the int digit as an index to an array of functors, append
-          // just one character forming the digit with base and at position(row, column)
-          printer.functors[digit].execute(base, row, column);
+          // using the int digit as an index to an array of prints, append just
+          // one character forming the digit based on size and position(row, column)
+          builder.append(prints[digit].toChar(size, row, column));
         }
       }
-      printer.builder.append(System.lineSeparator());
+      builder.append(System.lineSeparator());
     }
     // one blank line after each string of digits
-    printer.builder.append(System.lineSeparator());
+    builder.append(System.lineSeparator());
 
-    return printer.builder.toString();
+    return builder.toString();
   }
-}
 
-class Printer
-{
-  Functor[] functors = null;
-  StringBuilder builder = new StringBuilder();
-
-  public Printer()
+  // practice Java functor
+  public interface Print
   {
-    if (functors == null)
+    public char toChar(int size, int row, int column);
+  }
+
+  // all Print? classes must be static to allow instantiation in the static
+  // block in class LCD
+  static class Print0 implements Print
+  {
+    public char toChar(int size, int row, int column)
     {
-      // array of functors, each in charge of appending one character to a
-      // StringBuilder based on array index, row, column, and base
-      functors = new Functor[10];
-
-      // functors[0], which is Functor0 is in charge of printing letter '0', etc
-      functors[0] = new Functor0();
-      functors[1] = new Functor1();
-      functors[2] = new Functor2();
-      functors[3] = new Functor3();
-      functors[4] = new Functor4();
-      functors[5] = new Functor5();
-      functors[6] = new Functor6();
-      functors[7] = new Functor7();
-      functors[8] = new Functor8();
-      functors[9] = new Functor9();
-    }
-  }
-
-  public interface Functor
-  {
-    public void execute(int base, int row, int column);
-  }
-
-  class Functor0 implements Functor
-  {
-    public void execute(int base, int row, int column)
-    {
-      String tmp = builder.toString();
-      if (row == 0 || row == 2*base+2)
+      if (row == 0 || row == 2*size+2)
       {
-        if (column == 0 || column == base+1)
-          builder.append(" ");
+        if (column == 0 || column == size+1)
+          return ' ';
         else
-          builder.append("-");
+          return '-';
       }
-      else if (row == base+1)
-        builder.append(" ");
+      else if (row == size+1)
+        return ' ';
       else
       {
-        if (column == 0 || column == base+1)
-          builder.append("|");
+        if (column == 0 || column == size+1)
+          return '|';
         else
-          builder.append(" ");
+          return ' ';
       }
     }
   }
 
-  class Functor1 implements Functor
+  static class Print1 implements Print
   {
-    public void execute(int base, int row, int column)
+    public char toChar(int size, int row, int column)
     {
-      String tmp = builder.toString();
-      if (row == 0 || row == base+1 || row == 2*base+2)
-        builder.append(" ");
+      if (row == 0 || row == size+1 || row == 2*size+2)
+        return ' ';
       else
       {
-        if (column == base+1)
-          builder.append("|");
+        if (column == size+1)
+          return '|';
         else
-          builder.append(" ");
+          return ' ';
       }
     }
   }
 
-  class Functor2 implements Functor
+  static class Print2 implements Print
   {
-    public void execute(int base, int row, int column)
+    public char toChar(int size, int row, int column)
     {
-      String tmp = builder.toString();
-      if (row == 0 || row == base+1 || row == 2*base+2)
+      if (row == 0 || row == size+1 || row == 2*size+2)
       {
-        if (column == 0 || column == base+1)
-          builder.append(" ");
+        if (column == 0 || column == size+1)
+          return ' ';
         else
-          builder.append("-");
+          return '-';
       }
       else
       {
-        if (row <= base)
+        if (row <= size)
         {
-          if (column == base+1)
-            builder.append("|");
+          if (column == size+1)
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
         else
         {
           if (column == 0)
-            builder.append("|");
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
       }
     }
   }
 
-  class Functor3 implements Functor
+  static class Print3 implements Print
   {
-    public void execute(int base, int row, int column)
+    public char toChar(int size, int row, int column)
     {
-      String tmp = builder.toString();
-      if (row == 0 || row == base+1 || row == 2*base+2)
+      if (row == 0 || row == size+1 || row == 2*size+2)
       {
-        if (column == 0 || column == base+1)
-          builder.append(" ");
+        if (column == 0 || column == size+1)
+          return ' ';
         else
-          builder.append("-");
+          return '-';
       }
       else
       {
-        if (column == base+1)
-          builder.append("|");
+        if (column == size+1)
+          return '|';
         else
-          builder.append(" ");
+          return ' ';
       }
     }
   }
 
-  class Functor4 implements Functor
+  static class Print4 implements Print
   {
-    public void execute(int base, int row, int column)
+    public char toChar(int size, int row, int column)
     {
-      String tmp = builder.toString();
-      if (row == 0 || row == 2*base+2)
-        builder.append(" ");
-      else if (row == base+1)
+      if (row == 0 || row == 2*size+2)
+        return ' ';
+      else if (row == size+1)
       {
-        if (column == 0 || column == base+1)
-          builder.append(" ");
+        if (column == 0 || column == size+1)
+          return ' ';
         else
-          builder.append("-");
+          return '-';
       }
       else
       {
-        if (row <= base)
+        if (row <= size)
         {
-          if (column == 0 || column == base+1)
-            builder.append("|");
+          if (column == 0 || column == size+1)
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
         else
         {
-          if (column == base+1)
-            builder.append("|");
+          if (column == size+1)
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
       }
     }
   }
 
-  class Functor5 implements Functor
+  static class Print5 implements Print
   {
-    public void execute(int base, int row, int column)
+    public char toChar(int size, int row, int column)
     {
-      String tmp = builder.toString();
-      if (row == 0 || row == base+1 || row == 2*base+2)
+      if (row == 0 || row == size+1 || row == 2*size+2)
       {
-        if (column == 0 || column == base+1)
-          builder.append(" ");
+        if (column == 0 || column == size+1)
+          return ' ';
         else
-          builder.append("-");
+          return '-';
       }
       else
       {
-        if (row <= base)
+        if (row <= size)
         {
           if (column == 0)
-            builder.append("|");
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
         else
         {
-          if (column == base+1)
-            builder.append("|");
+          if (column == size+1)
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
       }
     }
   }
 
-  class Functor6 implements Functor
+  static class Print6 implements Print
   {
-    public void execute(int base, int row, int column)
+    public char toChar(int size, int row, int column)
     {
-      String tmp = builder.toString();
-      if (row == 0 || row == base+1 || row == 2*base+2)
+      if (row == 0 || row == size+1 || row == 2*size+2)
       {
-        if (column == 0 || column == base+1)
-          builder.append(" ");
+        if (column == 0 || column == size+1)
+          return ' ';
         else
-          builder.append("-");
+          return '-';
       }
       else
       {
-        if (row <= base)
+        if (row <= size)
         {
           if (column == 0)
-            builder.append("|");
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
         else
         {
-          if (column == 0 || column == base+1)
-            builder.append("|");
+          if (column == 0 || column == size+1)
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
       }
     }
   }
 
-  class Functor7 implements Functor
+  static class Print7 implements Print
   {
-    public void execute(int base, int row, int column)
+    public char toChar(int size, int row, int column)
     {
-      String tmp = builder.toString();
       if (row == 0)
       {
-        if (column == 0 || column == base+1)
-          builder.append(" ");
+        if (column == 0 || column == size+1)
+          return ' ';
         else
-          builder.append("-");
+          return '-';
       }
-      else if (row == base+1 || row == 2*base+2)
-        builder.append(" ");
+      else if (row == size+1 || row == 2*size+2)
+        return ' ';
       else
       {
-        if (column == base+1)
-          builder.append("|");
+        if (column == size+1)
+          return '|';
         else
-          builder.append(" ");
+          return ' ';
       }
     }
   }
 
-  class Functor8 implements Functor
+  static class Print8 implements Print
   {
-    public void execute(int base, int row, int column)
+    public char toChar(int size, int row, int column)
     {
-      String tmp = builder.toString();
-      if (row == 0 || row == base+1 || row == 2*base+2)
+      if (row == 0 || row == size+1 || row == 2*size+2)
       {
-        if (column == 0 || column == base+1)
-          builder.append(" ");
+        if (column == 0 || column == size+1)
+          return ' ';
         else
-          builder.append("-");
+          return '-';
       }
       else
       {
-        if (column == 0 || column == base+1)
-          builder.append("|");
+        if (column == 0 || column == size+1)
+          return '|';
         else
-          builder.append(" ");
+          return ' ';
       }
     }
   }
 
-  class Functor9 implements Functor
+  static class Print9 implements Print
   {
-    public void execute(int base, int row, int column)
+    public char toChar(int size, int row, int column)
     {
-      String tmp = builder.toString();
-      if (row == 0 || row == base+1 || row == 2*base+2)
+      if (row == 0 || row == size+1 || row == 2*size+2)
       {
-        if (column == 0 || column == base+1)
-          builder.append(" ");
+        if (column == 0 || column == size+1)
+          return ' ';
         else
-          builder.append("-");
+          return '-';
       }
       else
       {
-        if (row <= base)
+        if (row <= size)
         {
-          if (column == 0 || column == base+1)
-            builder.append("|");
+          if (column == 0 || column == size+1)
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
         else
         {
-          if (column == base+1)
-            builder.append("|");
+          if (column == size+1)
+            return '|';
           else
-            builder.append(" ");
+            return ' ';
         }
       }
     }
@@ -354,16 +353,17 @@ class skiena_1_6_4
     while (true)
     {
       // read the 2 integers
-      int base = scanner.nextInt();
+      int size = scanner.nextInt();
       int digits = scanner.nextInt();
 
       // end of input
-      if (base == 0 || digits == 0)
+      if (size == 0 || digits == 0)
         break;
       else
       {
         LCD lcd = new LCD();
-        lcd.base = base;
+        lcd.size = size;
+        // convert int to a string of digits
         lcd.digits = Integer.toString(digits);
         list.add(lcd);
       }
