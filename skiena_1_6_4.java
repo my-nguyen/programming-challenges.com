@@ -10,11 +10,9 @@ class LCD
 
   // array of Print's, each in charge of returning one character based on the
   // row, column, digit (array index) and size
-  static Print[] prints = null;
+  static Print[] prints = new Print[10];
   static
   {
-    prints = new Print[10];
-
     // prints[0], which is Print0 is in charge of printing letter '0', etc
     prints[0] = new Print0();
     prints[1] = new Print1();
