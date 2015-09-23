@@ -20,37 +20,39 @@ class skiena_1_6_5
         break;
       else
       {
-        switch(letter)
+        // only process valid commands
+        if ("ICLVHKFS".indexOf(letter) != -1)
         {
-        case 'I':
-          command = new Initialize(tokens);
-          break;
-        case 'C':
-          command = new Clear(tokens);
-          break;
-        case 'L':
-          command = new Color(tokens);
-          break;
-        case 'V':
-          command = new Vertical(tokens);
-          break;
-        case 'H':
-          command = new Horizontal(tokens);
-          break;
-        case 'K':
-          command = new Draw(tokens);
-          break;
-        case 'F':
-          command = new Fill(tokens);
-          break;
-        case 'S':
-          command = new Save(tokens);
-          break;
+          switch(letter)
+          {
+          case 'I':
+            command = new Initialize(tokens);
+            break;
+          case 'C':
+            command = new Clear(tokens);
+            break;
+          case 'L':
+            command = new Color(tokens);
+            break;
+          case 'V':
+            command = new Vertical(tokens);
+            break;
+          case 'H':
+            command = new Horizontal(tokens);
+            break;
+          case 'K':
+            command = new Draw(tokens);
+            break;
+          case 'F':
+            command = new Fill(tokens);
+            break;
+          case 'S':
+            command = new Save(tokens);
+            break;
+          }
+          list.add(command);
         }
       }
-
-      if (command != null)
-        list.add(command);
     }
     scanner.close();
     return list;
