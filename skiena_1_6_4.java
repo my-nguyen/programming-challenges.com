@@ -2,6 +2,13 @@ import java.util.*;
 
 class LCD
 {
+  public LCD(int base, int number)
+  {
+    size = base;
+    // convert int to a string of digits
+    digits = Integer.toString(number);
+  }
+
   // the size based on which to print a digit, with number of columns = size+2,
   // and number of rows = 2*size + 3
   int size;
@@ -359,10 +366,7 @@ class skiena_1_6_4
         break;
       else
       {
-        LCD lcd = new LCD();
-        lcd.size = size;
-        // convert int to a string of digits
-        lcd.digits = Integer.toString(digits);
+        LCD lcd = new LCD(size, digits);
         list.add(lcd);
       }
     }

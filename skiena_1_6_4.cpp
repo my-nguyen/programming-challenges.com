@@ -7,7 +7,7 @@ using namespace std;
 class LCD
 {
 public:
-  LCD() { static_init(); }
+  LCD(int base, int number);
   operator string();
 
 public:
@@ -52,6 +52,17 @@ void LCD::static_init()
     prints[8] = &print8;
     prints[9] = &print9;
   }
+}
+
+LCD::LCD(int base, int number)
+{
+  static_init();
+
+  size = base;
+  // convert int to a string of digits
+  stringstream stream;
+  stream << number;
+  digits = stream.str();
 }
 
 // due to the problem requirements, a string of digits (which is a number),
@@ -347,13 +358,7 @@ vector<LCD> input()
       break;
     else
     {
-      LCD lcd;
-      lcd.size = size;
-      // convert int to a string of digits
-      stringstream stream;
-      stream << number;
-      lcd.digits = stream.str();
-
+      LCD lcd(size, number);
       list.push_back(lcd);
     }
   }

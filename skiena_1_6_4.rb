@@ -1,6 +1,4 @@
 class LCD
-  attr_accessor :size, :digits
-
   def self.print0(size, row, column)
     if (row == 0 || row == 2*size+2)
       if (column == 0 || column == size+1)
@@ -219,6 +217,14 @@ class LCD
     end
   end
 
+  def initialize(base, number)
+    self.class.static_init
+
+    @size = base
+    # convert int to a string of digits
+    @digits = number.to_s
+  end
+
   # due to the problem requirements, a string of digits (which is a number),
   # is printed as follows: at each row, print all the characters that form a
   # digit at that row, followed by a blank, then repeat the process for others.
@@ -262,7 +268,6 @@ class LCD
 end
 
 def input
-  LCD.static_init()
   list = Array.new
   while (true)
     # read the 2 integers
@@ -274,10 +279,7 @@ def input
     if (size == 0 || number == 0)
       break
     else
-      lcd = LCD.new
-      lcd.size = size
-      # convert int to a string of digits
-      lcd.digits = number.to_s
+      lcd = LCD.new(size, number)
 
       list << lcd
     end

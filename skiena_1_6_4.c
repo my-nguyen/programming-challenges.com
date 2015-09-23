@@ -265,6 +265,13 @@ struct LCD
 };
 typedef struct LCD LCD;
 
+void lcd_init(LCD* lcd, int base, int number)
+{
+  lcd->size = base;
+  // convert int to a string of digits
+  sprintf(lcd->digits, "%d", number);
+}
+
 void concatenate(char string[], char letter)
 {
   sprintf(string+strlen(string), "%c", letter);
@@ -345,9 +352,7 @@ void input(LCD list[], int* count)
     else
     {
       LCD lcd;
-      lcd.size = size;
-      // convert int to a string of digits
-      sprintf(lcd.digits, "%d", number);
+      lcd_init(&lcd, size, number);
 
       list[*count] = lcd;
       *count += 1;
