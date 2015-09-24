@@ -246,6 +246,8 @@ public:
 
 vector<Command*> input()
 {
+  // vector<Command*> instead of vector<Command> because Command is an abstract
+  // base class which can't be instantiated.
   vector<Command*> list;
   while (true)
   {
@@ -299,14 +301,21 @@ vector<Command*> input()
   return list;
 }
 
-void output(vector<Command*> list)
+void output(vector<Command*>& list)
 {
   for (vector<Command*>::iterator it = list.begin(); it != list.end(); it++)
     (*it)->execute();
+}
+
+void cleanup(vector<Command*>& list)
+{
+  for (vector<Command*>::iterator it = list.begin(); it != list.end(); it++)
+    delete (*it);
 }
 
 int main()
 {
   vector<Command*> list = input();
   output(list);
+  cleanup(list);
 }
