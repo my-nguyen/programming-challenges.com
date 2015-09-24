@@ -74,9 +74,15 @@ class skiena_1_6_5
 // base class; all subclasses will have the specific functions
 class Command
 {
+  String[] tokens;
   // There's only one image, created by the I command. all commands such as
   // C, L, V, H, K, F, S operate on this single image.
   static Image image = null;
+
+  Command(String[] strings)
+  {
+    tokens = strings;
+  }
 
   // virtual method, to be overriden by all subclasses
   void execute()
@@ -86,25 +92,24 @@ class Command
 
 class Initialize extends Command
 {
-  int column_count;
-  int row_count;
-
-  public Initialize(String[] tokens)
+  public Initialize(String[] strings)
   {
-    column_count = Integer.parseInt(tokens[1]);
-    row_count = Integer.parseInt(tokens[2]);
+    super(strings);
   }
 
   void execute()
   {
+    int column_count = Integer.parseInt(tokens[1]);
+    int row_count = Integer.parseInt(tokens[2]);
     image = new Image(column_count, row_count);
   }
 }
 
 class Clear extends Command
 {
-  public Clear(String[] tokens)
+  public Clear(String[] strings)
   {
+    super(strings);
   }
 
   void execute()
@@ -115,118 +120,98 @@ class Clear extends Command
 
 class Color extends Command
 {
-  int column;
-  int row;
-  char color;
-
-  public Color(String[] tokens)
+  public Color(String[] strings)
   {
-    column = Integer.parseInt(tokens[1]);
-    row = Integer.parseInt(tokens[2]);
-    color = tokens[3].charAt(0);
+    super(strings);
   }
 
   void execute()
   {
+    int column = Integer.parseInt(tokens[1]);
+    int row = Integer.parseInt(tokens[2]);
+    char color = tokens[3].charAt(0);
     image.set(column, row, color);
   }
 }
 
 class Vertical extends Command
 {
-  int column;
-  int row1;
-  int row2;
-  char color;
-
-  public Vertical(String[] tokens)
+  public Vertical(String[] strings)
   {
-    column = Integer.parseInt(tokens[1]);
-    row1 = Integer.parseInt(tokens[2]);
-    row2 = Integer.parseInt(tokens[3]);
-    color = tokens[4].charAt(0);
+    super(strings);
   }
 
   void execute()
   {
+    int column = Integer.parseInt(tokens[1]);
+    int row1 = Integer.parseInt(tokens[2]);
+    int row2 = Integer.parseInt(tokens[3]);
+    char color = tokens[4].charAt(0);
     image.vertical(column, row1, row2, color);
   }
 }
 
 class Horizontal extends Command
 {
-  int column1;
-  int column2;
-  int row;
-  char color;
-
-  public Horizontal(String[] tokens)
+  public Horizontal(String[] strings)
   {
-    column1 = Integer.parseInt(tokens[1]);
-    column2 = Integer.parseInt(tokens[2]);
-    row = Integer.parseInt(tokens[3]);
-    color = tokens[4].charAt(0);
+    super(strings);
   }
 
   void execute()
   {
+    int column1 = Integer.parseInt(tokens[1]);
+    int column2 = Integer.parseInt(tokens[2]);
+    int row = Integer.parseInt(tokens[3]);
+    char color = tokens[4].charAt(0);
     image.horizontal(column1, column2, row, color);
   }
 }
 
 class Draw extends Command
 {
-  int column1;
-  int column2;
-  int row1;
-  int row2;
-  char color;
-
-  public Draw(String[] tokens)
+  public Draw(String[] strings)
   {
-    column1 = Integer.parseInt(tokens[1]);
-    column2 = Integer.parseInt(tokens[2]);
-    row1 = Integer.parseInt(tokens[3]);
-    row2 = Integer.parseInt(tokens[4]);
-    color = tokens[5].charAt(0);
+    super(strings);
   }
 
   void execute()
   {
+    int column1 = Integer.parseInt(tokens[1]);
+    int column2 = Integer.parseInt(tokens[2]);
+    int row1 = Integer.parseInt(tokens[3]);
+    int row2 = Integer.parseInt(tokens[4]);
+    char color = tokens[5].charAt(0);
     image.draw(column1, column2, row1, row2, color);
   }
 }
 
 class Fill extends Command
 {
-  int column;
-  int row;
-  char color;
-
-  public Fill(String[] tokens)
+  public Fill(String[] strings)
   {
-    column = Integer.parseInt(tokens[1]);
-    row = Integer.parseInt(tokens[2]);
-    color = tokens[3].charAt(0);
+    super(strings);
   }
 
   void execute()
   {
+    int column = Integer.parseInt(tokens[1]);
+    int row = Integer.parseInt(tokens[2]);
+    char color = tokens[3].charAt(0);
     image.fill(column, row, color);
   }
 }
 
 class Save extends Command
 {
-  String filename;
-
-  public Save(String[] tokens)
+  public Save(String[] strings)
   {
-    filename = tokens[1];
+    super(strings);
   }
 
   void execute()
   {
+    String filename = tokens[1];
     image.save(filename);
   }
 }
