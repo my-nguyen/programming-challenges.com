@@ -151,97 +151,102 @@ protected:
   // There's only one image, created by the I command. all commands such as
   // C, L, V, H, K, F, S operate on this single image.
   static Image image;
+  istringstream sstream;
 
 public:
+  Command(const string& line) : sstream(line) {}
   // virtual method, to be overriden by all subclasses
   virtual void execute() = 0;
 };
 
 Image Command::image;
 
-class Initialize: public Command
+struct Initialize: public Command
 {
-  int column_count;
-  int row_count;
-
-public:
-  Initialize(istringstream& stream) { stream >> column_count >> row_count; }
-  void execute() { image.initialize(column_count, row_count); }
+  Initialize(const string& line) : Command(line) {}
+  void execute()
+  {
+    int column_count, row_count;
+    sstream >> column_count >> row_count;
+    image.initialize(column_count, row_count);
+  }
 };
 
-class Clear: public Command
+struct Clear: public Command
 {
-public:
-  Clear(istringstream& stream) {}
+  Clear(const string& line) : Command(line) {}
   void execute() { image.clear(); }
 };
 
-class Color: public Command
+struct Color: public Command
 {
-  int column;
-  int row;
-  char color;
-
-public:
-  Color(istringstream& stream) { stream >> column >> row >> color; }
-  void execute() { image.set(column, row, color); }
+  Color(const string& line) : Command(line) {}
+  void execute()
+  {
+    int column, row;
+    char color;
+    sstream >> column >> row >> color;
+    image.set(column, row, color);
+  }
 };
 
-class Vertical: public Command
+struct Vertical: public Command
 {
-  int column;
-  int row1;
-  int row2;
-  char color;
-
-public:
-  Vertical(istringstream& stream) { stream >> column >> row1 >> row2 >> color; }
-  void execute() { image.vertical(column, row1, row2, color); }
+  Vertical(const string& line) : Command(line) {}
+  void execute()
+  {
+    int column, row1, row2;
+    char color;
+    sstream >> column >> row1 >> row2 >> color;
+    image.vertical(column, row1, row2, color);
+  }
 };
 
-class Horizontal: public Command
+struct Horizontal: public Command
 {
-  int column1;
-  int column2;
-  int row;
-  char color;
-
-public:
-  Horizontal(istringstream& stream) { stream >> column1 >> column2 >> row >> color; }
-  void execute() { image.horizontal(column1, column2, row, color); }
+  Horizontal(const string& line) : Command(line) {}
+  void execute()
+  {
+    int column1, column2, row;
+    char color;
+    sstream >> column1 >> column2 >> row >> color;
+    image.horizontal(column1, column2, row, color);
+  }
 };
 
-class Draw: public Command
+struct Draw: public Command
 {
-  int column1;
-  int column2;
-  int row1;
-  int row2;
-  char color;
-
-public:
-  Draw(istringstream& stream) { stream >> column1 >> column2 >> row1 >> row2 >> color; }
-  void execute() { image.draw(column1, column2, row1, row2, color); }
+  Draw(const string& line) : Command(line) {}
+  void execute()
+  {
+    int column1, column2, row1, row2;
+    char color;
+    sstream >> column1 >> column2 >> row1 >> row2 >> color;
+    image.draw(column1, column2, row1, row2, color);
+  }
 };
 
-class Fill: public Command
+struct Fill: public Command
 {
-  int column;
-  int row;
-  char color;
-
-public:
-  Fill(istringstream& stream) { stream >> column >> row >> color; }
-  void execute() { image.fill(column, row, color); }
+  Fill(const string& line) : Command(line) {}
+  void execute()
+  {
+    int column, row;
+    char color;
+    sstream >> column >> row >> color;
+    image.fill(column, row, color);
+  }
 };
 
-class Save: public Command
+struct Save: public Command
 {
-  string filename;
-
-public:
-  Save(istringstream& stream) { stream >> filename; }
-  void execute() { image.save(filename); }
+  Save(const string& line) : Command(line) {}
+  void execute()
+  {
+    string filename;
+    sstream >> filename;
+    image.save(filename);
+  }
 };
 
 vector<Command*> input()
@@ -255,7 +260,6 @@ vector<Command*> input()
     // read and parse all tokens in each line
     char line[80];
     cin.getline(line, 80);
-    istringstream stream(line+2);
     // decipher the character code
     char letter = line[0];
     // terminate program
@@ -269,28 +273,28 @@ vector<Command*> input()
         switch(letter)
         {
         case 'I':
-          command = new Initialize(stream);
+          command = new Initialize(line+2);
           break;
         case 'C':
-          command = new Clear(stream);
+          command = new Clear(line+2);
           break;
         case 'L':
-          command = new Color(stream);
+          command = new Color(line+2);
           break;
         case 'V':
-          command = new Vertical(stream);
+          command = new Vertical(line+2);
           break;
         case 'H':
-          command = new Horizontal(stream);
+          command = new Horizontal(line+2);
           break;
         case 'K':
-          command = new Draw(stream);
+          command = new Draw(line+2);
           break;
         case 'F':
-          command = new Fill(stream);
+          command = new Fill(line+2);
           break;
         case 'S':
-          command = new Save(stream);
+          command = new Save(line+2);
           break;
         }
 
