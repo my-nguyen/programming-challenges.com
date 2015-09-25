@@ -1,9 +1,9 @@
+// compile: g++ -std=c++11 skiena_1_6_6.cpp (to enable std::stoi())
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cstdio>   // sprintf()
-#include <cstring>  // strcpy(), strcmp()
-#include <cstdlib>  // atoi()
+#include <sstream>  // stringstream
+#include <iomanip>  // setfill(), setw()
 using namespace std;
 
 #define MAX_WORDS 1000
@@ -26,7 +26,7 @@ public:
   //   converting to and from char[] and String
   // (4) an array of String was chosen because of the convenience in assigning,
   //   format printing, etc.
-  char words[MAX_WORDS][4];
+  string words[MAX_WORDS];
 
   // count of all instruction words read from input
   int count;
@@ -35,7 +35,7 @@ public:
   RAM()
   {
     for (int i = 0; i < MAX_WORDS; i++)
-      strcpy(words[i], "000");
+      words[i] = "000";
     count = 0;
   }
 
@@ -66,9 +66,10 @@ public:
     string builder;
     for (int i = 0; i < MAX_REGISTERS; i++)
     {
-      char tmp[10];
-      sprintf(tmp, "%d ", data[i]);
-      builder.append(tmp);
+      // pure C++: use of stringstream, setfill() and setw() to replace sprintf()
+      stringstream stream;
+      stream << setfill('0') << setw(3) << data[i];
+      builder.append(stream.str()).append(" ");
     }
     return builder;
   }
@@ -97,12 +98,15 @@ public:
 vector<RAM> input()
 {
   // number of cases
-  char line[80];
-  cin.getline(line, 80);
-  int case_count = atoi(line);
+  // char line[80];
+  string line;
+  getline(cin, line);
+  // cin.getline(line, 80);
+  int case_count = stoi(line);
 
   // skip the blank line following the number of cases
-  cin.getline(line, 80);
+  getline(cin, line);
+  // cin.getline(line, 80);
 
   vector<RAM> list;
   for (int i = 0; i < case_count; i++)
@@ -110,15 +114,15 @@ vector<RAM> input()
     RAM ram;
 
     // read until end of input
-    while (cin.getline(line, 80))
+    while (getline(cin, line))
     {
       // empty line means the start of a new set of instructions
-      if (strlen(line) == 0)
+      if (line.length() == 0)
         break;
       else
       {
         // fetch the 3-digit instruction
-        strcpy(ram.words[ram.count], line);
+        ram.words[ram.count] = line;
         ram.count++;
       }
     }
@@ -133,7 +137,7 @@ void output(vector<RAM>& list)
   for (vector<RAM>::iterator it = list.begin(); it != list.end(); it++)
   {
     // snapshot of all 1000 instructions and 10 registers
-    char snap_words[1000][4];
+    string snap_words[1000];
     Registers snap_registers;
     bool snap_taken = false;
 
@@ -148,7 +152,8 @@ void output(vector<RAM>& list)
     while (halt == false)
     {
       // current instruction word based on location
-      char* word = it->words[location];
+      string word = it->words[location];
+      // cout << "location: " << location << ", word: " << word.c_str() << ", registers: " << registers.operator string() << endl;
       // the digits at location 0, 1, and 2 inside the current instruction word
       int zero = word[0] - '0';
       int one = word[1] - '0';
@@ -160,40 +165,45 @@ void output(vector<RAM>& list)
         // if register at 2 does not contain 0
         if (registers.data[two] != 0)
         {
-          // if the location in register at 1 is the same as the current
-          // location, then we have an infinite loop. In that case, just go to
-          // the next instruction
+          // if the GOTO location (contained in register at 1) is the current
+          // location, then we have an infinite loop. In that case, just take
+          // one step to the next location
           if (location == registers.data[one])
           {
+            cout << "repeat::location: " << location << ", word: " << word << ", register[" << one << "]: " << registers.data[one] << endl;
             location++;
           }
           // if the instruction at the location contained in register at 1
           // hasn't changed between the last GOTO instruction (0xx) and now,
-          // then we have another indefinite loop. In that case, halt the program
+          // then we have another infinite loop. In that case, halt the program
           else if (snap_taken &&
-            !strcmp(snap_words[registers.data[one]], it->words[registers.data[one]]) &&
-            !Registers::approaching_zero(snap_registers.data[two], registers.data[two]))
+            snap_words[registers.data[one]] == it->words[registers.data[one]]) // &&
+            // !Registers::approaching_zero(snap_registers.data[two], registers.data[two]))
           {
+            cout << "GOTO::location: " << location << ", word: " << word << ", register[" << one << "]: " << registers.data[one] << ", words[" << registers.data[one] << "]: " << it->words[registers.data[one]] << endl;
             halt = true;
           }
           // only go to the location in register at 1 if everything is ok
           else
           {
+            cout << "snapshot::word: " << word << ", register[" << one << "]: " << registers.data[one] << ", words[" << registers.data[one] << "]: " << it->words[registers.data[one]] << endl;
             // take a snapshot of the instruction at the location contained in
             // register at 1
-            strcpy(snap_words[registers.data[one]], it->words[registers.data[one]]);
+            snap_words[registers.data[one]] = it->words[registers.data[one]];
             // take a snapshot of all registers
             snap_registers = registers;
             snap_taken = true;
-
             // go to the location in register at 1
             location = registers.data[one];
           }
         }
         // if the current location is beyond the current set of instructions,
         // halt the program
-        else if (location >= it->count && !strcmp(it->words[location], "000"))
+        else if (location >= it->count && it->words[location] == "000")
+        {
+          cout << "beyond::word: " << word << ", location: " << location << endl;
           halt = true;
+        }
         // otherwise, go to the next location
         else
           location++;
@@ -201,7 +211,10 @@ void output(vector<RAM>& list)
       case 1:
         // 100 means halt
         if (one == 0 && two == 0)
+        {
+          cout << "exit::word: " << word << endl;
           halt = true;
+        }
         // all other 1xx instructions are invalid, so ignore them and move on
         // to the next instruction
         else
@@ -242,17 +255,24 @@ void output(vector<RAM>& list)
         // at 2. So: first, fetch the content of register at 2, which is an
         // address. then, go to the address location in RAM and fetch the
         // instruction there and store it in register at 1.
-        registers.data[one] = atoi(it->words[registers.data[two]]);
+        registers.data[one] = stoi(it->words[registers.data[two]]);
         location++;
         break;
       case 9:
-        // set the value in RAM whose address is in register at 2 to that of
-        // register at 1. So first, go to the address location in RAM
-        // contained in register at 2, then change the word at that location
-        // to the content of register at 1
-        sprintf(it->words[registers.data[two]], "%03d", registers.data[one]);
-        location++;
-        break;
+        {
+          // set the value in RAM whose address is in register at 2 to that of
+          // register at 1. So first, go to the address location in RAM
+          // contained in register at 2, then change the word at that location
+          // to the content of register at 1
+          // pure C++: use of stringstream, setfill() and setw() to replace sprintf()
+          stringstream stream;
+          stream << setfill('0') << setw(3) << registers.data[one];
+          it->words[registers.data[two]] = stream.str();
+          cout << "RAM-writing::word: " << word << ", register[" << two << "]/address: " << registers.data[two] << ", register[" << one << "]/value: " << registers.data[one] << endl;
+          // sprintf(it->words[registers.data[two]], "%03d", registers.data[one]);
+          location++;
+          break;
+        }
       }
       execution_count++;
     }
