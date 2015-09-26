@@ -25,7 +25,7 @@ class Instructions
     StringBuilder builder = new StringBuilder();
     for (Integer key : data.keySet())
       // builder.append(data.get(key)).append("\n");
-      builder.append(key).append(" ").append(data.get(key)).append("\n");
+      builder.append(key).append(": ").append(data.get(key)).append("\n");
     return builder.toString();
   }
 
@@ -96,7 +96,7 @@ class skiena_1_6_6
   {
     for (Instructions instructions : list)
     {
-      // System.out.println("Instructions:\n" + instructions);
+      System.out.println("Instructions:\n" + instructions);
       int goto_register_2 = 999;
       int goto_count = 0;
 
@@ -105,6 +105,7 @@ class skiena_1_6_6
       int location = 0;
       // the number of executed instructions
       int execution_count = 0;
+      final int MAX_LOOPS = 10;
       // because of the switch statement inside the while loop, a break won't
       // cause an exit from the while loop; a boolean flag is used instead.
       boolean halt = false;
@@ -112,7 +113,7 @@ class skiena_1_6_6
       {
         // current instruction based on location
         String instruction = instructions.get(location);
-        // System.out.println("location: " + location + ", instruction: " + instruction + ", registers: " + registers);
+        System.out.println("location: " + location + ", instruction: " + instruction + ", registers: " + registers);
         // the digits at location 0, 1, and 2 inside the current instruction
         int zero = Character.getNumericValue(instruction.charAt(0));
         int one = Character.getNumericValue(instruction.charAt(1));
@@ -121,7 +122,7 @@ class skiena_1_6_6
         {
         // special and troublesome case
         case 0:
-          // System.out.println("Goto::instruction: " + instruction + ", register[" + one + "]: " + registers.data[one] + ", register[" + two + "]: " + registers.data[two]);
+          System.out.println("\tgoto::instruction: " + instruction + ", register[" + one + "]: " + registers.data[one] + ", register[" + two + "]: " + registers.data[two]);
           // if register at 2 does not contain 0
           if (registers.data[two] != 0)
           {
@@ -130,21 +131,27 @@ class skiena_1_6_6
             // the next instruction
             if (location == registers.data[one])
             {
-              // System.out.println("repeat::location: " + location + ", instruction: " + instruction + ", register[" + one + "]: " + registers.data[one]);
+              System.out.println("\tlocation: " + location + ", instruction: " + instruction + ", register[" + one + "]: " + registers.data[one]);
               location++;
             }
-            // if the instruction at the location contained in register at 1
-            // hasn't changed between the last GOTO instruction (0xx) and now,
-            // then we have another indefinite loop. In that case, halt the program
-            else if (goto_register_2 == registers.data[two] || goto_count >= 5)
+            // if the content of register at 2 hasn't changed between the last
+            // GOTO instruction (0xx) and now, then we have another infinite
+            // loop. In that case, halt the program
+            else if (goto_register_2 == registers.data[two])
             {
-              // System.out.println("halt(goto)::current location: " + location + ", next location: " + registers.data[one] + ", snapshot == register[" + two + "]: " + registers.data[two] + ", goto_count: " + goto_count);
+              System.out.println("\thalt::current location: " + location + ", next location: " + registers.data[one] + ", snapshot == register[" + two + "]: " + registers.data[two]);
               halt = true;
+            }
+            else if (goto_count >= MAX_LOOPS)
+            {
+              System.out.println("\thalt::current location: " + location + ", next location: " + registers.data[one] + ", goto_count: " + goto_count);
+              halt = true;
+              execution_count -= goto_count;
             }
             // only go to the location in register at 1 if everything is ok
             else
             {
-              // System.out.println("snapshot::current location: " + location + ", next location: " + registers.data[one] + ", saving register[" + two + "]: " + registers.data[two]);
+              System.out.println("\tsnapshot::current location: " + location + ", next location: " + registers.data[one] + ", saving register[" + two + "]: " + registers.data[two]);
               goto_register_2 = registers.data[two];
               goto_count++;
 
@@ -156,7 +163,7 @@ class skiena_1_6_6
           // halt the program
           else if (!instructions.data.containsKey(location+1))
           {
-            // System.out.println("halt(RAM)::next location (" + (location+1) + ") not in RAM");
+            System.out.println("\thalt::next location (" + (location+1) + ") not in RAM");
             halt = true;
           }
           // otherwise, go to the next location
@@ -167,7 +174,7 @@ class skiena_1_6_6
           // 100 means halt
           if (one == 0 && two == 0)
           {
-            // System.out.println("exit(100)");
+            System.out.println("\texit(100)");
             halt = true;
           }
           // all other 1xx instructions are invalid, so ignore them and move on
@@ -219,7 +226,7 @@ class skiena_1_6_6
           // contained in register at 2, then change the instruction at that location
           // to the content of register at 1
           instructions.data.put(registers.data[two], String.format("%03d", registers.data[one]));
-          // System.out.println("RAM-write::instruction: " + instruction + ", register[" + two + "]/address: " + registers.data[two] + ", register[" + one + "]/value: " + registers.data[one]);
+          System.out.println("\tRAM-write::instruction: " + instruction + ", register[" + two + "](address): " + registers.data[two] + ", register[" + one + "](value): " + registers.data[one]);
           location++;
           break;
         }
