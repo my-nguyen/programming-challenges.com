@@ -35,7 +35,7 @@ public:
   {
     string builder;
     for (map<int, string>::iterator it = data.begin(); it != data.end(); it++)
-      builder.append(it->second).append("\n");
+      builder.append(to_string(it->first)).append(": ").append(it->second).append("\n");
     return builder;
   }
 
@@ -69,14 +69,6 @@ public:
       builder.append(stream.str()).append(" ");
     }
     return builder;
-  }
-
-  // this method makes a copy of itself and returns the destination
-  Registers& operator=(Registers& rhs)
-  {
-    for (int i = 0; i < MAX_REGISTERS; i++)
-      data[i] = rhs.data[i];
-    return *this;
   }
 };
 
@@ -115,13 +107,15 @@ vector<Instructions> input()
   return list;
 }
 
+#define MAX_LOOPS 10
 void output(vector<Instructions>& list)
 {
   for (vector<Instructions>::iterator it = list.begin(); it != list.end(); it++)
   {
+    // cout << "Instructions:\n" << it->operator string() << endl;
     // snapshot of instructions
-    map<int, string> snap_instructions;
-    bool snap_taken = false;
+    int goto_register_2 = 999;
+    int goto_count = 0;
 
     Registers registers;
     // location of the current instruction word
@@ -144,35 +138,38 @@ void output(vector<Instructions>& list)
       {
       // special and troublesome case
       case 0:
-        // cout << "location: " << location << ", instruction: " << instruction << ", register[" << one << "]: " << registers.data[one] << ", register[" << two << "]: " << registers.data[two] << endl;
+        // cout << "\tgoto::instruction: " << instruction << ", register[" << one << "]: " << registers.data[one] << ", register[" << two << "]: " << registers.data[two] << endl;
         // if register at 2 does not contain 0
         if (registers.data[two] != 0)
         {
-          // if the GOTO location (contained in register at 1) is the current
-          // location, then we have an infinite loop. In that case, just take
-          // one step to the next location
+          // if the location in register at 1 is the same as the current
+          // location, then we have an infinite loop. In that case, just go to
+          // the next instruction
           if (location == registers.data[one])
           {
-            // cout << "repeat::location: " << location << ", instruction: " << instruction << ", register[" << one << "]: " << registers.data[one] << endl;
+            // System.out.println("\tlocation: " + location + ", instruction: " + instruction + ", register[" + one + "]: " + registers.data[one]);
             location++;
           }
-          // if the instruction at the location contained in register at 1
-          // hasn't changed between the last GOTO instruction (0xx) and now,
-          // then we have another infinite loop. In that case, halt the program
-          else if (snap_taken &&
-            snap_instructions.find(registers.data[one])->second == it->get(registers.data[one]))
+          // if the content of register at 2 hasn't changed between the last
+          // GOTO instruction (0xx) and now, then we have another infinite
+          // loop. In that case, halt the program
+          else if (goto_register_2 == registers.data[two])
           {
-            // cout << "halt(goto)::location: " << location << ", instruction: " << instruction << ", register[" << one << "]/next location: " << registers.data[one] << ", instruction[" << registers.data[one] << "]/snap-instruction: " << it->get(registers.data[one]) << endl;
+            // cout << "\thalt::current location: " << location << ", next location: " << registers.data[one] << ", snapshot == register[" << two << "]: " << registers.data[two] << endl;
             halt = true;
+          }
+          else if (goto_count >= MAX_LOOPS)
+          {
+            // cout << "\thalt::current location: " << location << ", next location: " << registers.data[one] << ", goto_count: " << goto_count << endl;
+            halt = true;
+            execution_count -= goto_count;
           }
           // only go to the location in register at 1 if everything is ok
           else
           {
-            // cout << "snapshot::instruction: " << instruction << ", register[" << one << "]: " << registers.data[one] << ", instructions[" << registers.data[one] << "]: " << it->get(registers.data[one]) << endl;
-            // take a snapshot of the instruction at the location contained in
-            // register at 1
-            snap_instructions[registers.data[one]] = it->get(registers.data[one]);
-            snap_taken = true;
+            // cout << "\tsnapshot::current location: " << location << ", next location: " << registers.data[one] << ", saving register[" << two << "]: " << registers.data[two] << endl;
+            goto_register_2 = registers.data[two];
+            goto_count++;
             // go to the location in register at 1
             location = registers.data[one];
           }
@@ -181,7 +178,7 @@ void output(vector<Instructions>& list)
         // halt the program
         else if (it->data.find(location+1) == it->data.end())
         {
-          // cout << "halt(RAM)::next location (" << (location+1) << ") not in RAM" << endl;
+          // cout << "\thalt::next location (" << (location+1) << ") not in RAM" << endl;
           halt = true;
         }
         // otherwise, go to the next location
@@ -192,7 +189,7 @@ void output(vector<Instructions>& list)
         // 100 means halt
         if (one == 0 && two == 0)
         {
-          // cout << "exit(100)" << endl;
+          // cout << "\texit(100)" << endl;
           halt = true;
         }
         // all other 1xx instructions are invalid, so ignore them and move on
@@ -248,7 +245,7 @@ void output(vector<Instructions>& list)
           stringstream stream;
           stream << setfill('0') << setw(3) << registers.data[one];
           it->data[registers.data[two]] = stream.str();
-          // cout << "RAM-write::instruction: " << instruction << ", register[" << two << "]/address: " << registers.data[two] << ", register[" << one << "]/value: " << registers.data[one] << endl;
+          // cout << "\tRAM-write::instruction: " << instruction << ", register[" << two << "](address): " << registers.data[two] << ", register[" << one << "](value): " << registers.data[one] << endl;
           // sprintf(it->instructions[registers.data[two]], "%03d", registers.data[one]);
           location++;
           break;
