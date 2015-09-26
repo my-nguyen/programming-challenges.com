@@ -1,13 +1,9 @@
 import java.util.*;
 
-class RAM
+class Instructions
 {
-  // "words" is a field of 1000 instruction words, each containing 3 digits.
-  // Even when the instruction words given in input don't fill all 1000 address
-  // locations, the unused portion must still be available and initialized to
-  // "000", because the instruction 9xx will attempt to override a word
-  // instruction at address so-and-so with some value that is beyond the number
-  // of words from input. consideration for selecting a type for "words":
+  // "data" is a field of 1000 instruction words, each containing 3 digits.
+  //   consideration for selecting a type for "instructions":
   // (1) a vector of char[] was rejected because a vector element must be
   //   an object type to allow copying and assignment, whereas a char[]
   //   is not an object
@@ -16,33 +12,30 @@ class RAM
   //   vector
   // (3) an array of char[] was rejected because of the inconvenience in
   //   converting to and from char[] and String
-  // (4) an array of String was chosen because of the convenience in assigning,
-  //   format printing, etc.
-  final int MAX_WORDS = 1000;
-  public String[] words = new String[MAX_WORDS];
+  // (4) an array of 1000 String's was rejected because input doesn't fill all
+  //   1000 instructions, thus causing waste
+  // (5) a map from Integer to String was chosen because we only save the
+  //   instructions actually created
+  Map<Integer, String> data = new HashMap<Integer, String>();
 
-  // count of all instruction words read from input
-  public int count;
-
-  public RAM()
-  {
-    for (int i = 0; i < MAX_WORDS; i++)
-      words[i] = "000";
-    count = 0;
-  }
+  public Instructions() {}
 
   public String toString()
   {
     StringBuilder builder = new StringBuilder();
-    for (int i = 0; i < count; i++)
-      builder.append(words[i]).append("\n");
+    for (Integer key : data.keySet())
+      // builder.append(data.get(key)).append("\n");
+      builder.append(key).append(" ").append(data.get(key)).append("\n");
     return builder.toString();
+  }
+
+  public String get(int key)
+  {
+    return data.containsKey(key)? data.get(key) : "000";
   }
 }
 
-// this class implements Cloneable so that it can support cloning, for use in
-// taking snapshots
-class Registers implements Cloneable
+class Registers
 {
   final int MAX_REGISTERS = 10;
   public int[] data = new int[MAX_REGISTERS];
@@ -60,32 +53,11 @@ class Registers implements Cloneable
       builder.append(data[i] + " ");
     return builder.toString();
   }
-
-  // this method makes a copy of itself and returns the destination
-  // it's the equivalence of C++ assignment operator
-  public Object clone()
-  {
-    Registers registers = new Registers();
-    registers.data = (int[])data.clone();
-    return registers;
-  }
-
-  // this method tells whether within the next 10 read's the current value will
-  // become zero. this is a hack (10 was chosen at random) to prevent an
-  // infinite loop.
-  static boolean approaching_zero(int previous, int current)
-  {
-    int diff = current - previous;
-    int tmp = current;
-    for (int i = 0; i < 10 && current != 0; i++)
-      current += diff;
-    return current == 0;
-  }
 }
 
 class skiena_1_6_6
 {
-  static List<RAM> input()
+  static List<Instructions> input()
   {
     Scanner scanner = new Scanner(System.in);
     // number of cases
@@ -93,10 +65,11 @@ class skiena_1_6_6
     // skip the blank line following the number of cases
     scanner.nextLine();
 
-    List<RAM> list = new ArrayList<>();
+    List<Instructions> list = new ArrayList<>();
     for (int i = 0; i < case_count; i++)
     {
-      RAM ram = new RAM();
+      Instructions instructions = new Instructions();
+      int index = 0;
 
       // read until end of input
       while (scanner.hasNext())
@@ -108,28 +81,27 @@ class skiena_1_6_6
         else
         {
           // fetch the 3-digit instruction
-          ram.words[ram.count] = line;
-          ram.count++;
+          instructions.data.put(index, line);
+          index++;
         }
       }
       // retain the current set of instructions
-      list.add(ram);
+      list.add(instructions);
     }
     scanner.close();
     return list;
   }
 
-  static void output(List<RAM> list)
+  static void output(List<Instructions> list)
   {
-    for (RAM ram : list)
+    for (Instructions instructions : list)
     {
-      // snapshot of all 1000 instructions and 10 registers
-      int[] snap_words = new int[1000];
-      Registers snap_registers = new Registers();
-      boolean snap_taken = false;
+      // System.out.println("Instructions:\n" + instructions);
+      int goto_register_2 = 999;
+      int goto_count = 0;
 
       Registers registers = new Registers();
-      // location of the current instruction word
+      // location of the current instruction instruction
       int location = 0;
       // the number of executed instructions
       int execution_count = 0;
@@ -138,16 +110,18 @@ class skiena_1_6_6
       boolean halt = false;
       while (halt == false)
       {
-        // current instruction word based on location
-        String word = ram.words[location];
-        // the digits at location 0, 1, and 2 inside the current instruction word
-        int zero = Character.getNumericValue(word.charAt(0));
-        int one = Character.getNumericValue(word.charAt(1));
-        int two = Character.getNumericValue(word.charAt(2));
+        // current instruction based on location
+        String instruction = instructions.get(location);
+        // System.out.println("location: " + location + ", instruction: " + instruction + ", registers: " + registers);
+        // the digits at location 0, 1, and 2 inside the current instruction
+        int zero = Character.getNumericValue(instruction.charAt(0));
+        int one = Character.getNumericValue(instruction.charAt(1));
+        int two = Character.getNumericValue(instruction.charAt(2));
         switch (zero)
         {
         // special and troublesome case
         case 0:
+          // System.out.println("Goto::instruction: " + instruction + ", register[" + one + "]: " + registers.data[one] + ", register[" + two + "]: " + registers.data[two]);
           // if register at 2 does not contain 0
           if (registers.data[two] != 0)
           {
@@ -156,36 +130,35 @@ class skiena_1_6_6
             // the next instruction
             if (location == registers.data[one])
             {
+              // System.out.println("repeat::location: " + location + ", instruction: " + instruction + ", register[" + one + "]: " + registers.data[one]);
               location++;
             }
             // if the instruction at the location contained in register at 1
             // hasn't changed between the last GOTO instruction (0xx) and now,
             // then we have another indefinite loop. In that case, halt the program
-            else if (snap_taken &&
-              snap_words[registers.data[one]] == Integer.parseInt(ram.words[registers.data[one]]) &&
-              !Registers.approaching_zero(snap_registers.data[two], registers.data[two]))
+            else if (goto_register_2 == registers.data[two] || goto_count >= 5)
             {
+              // System.out.println("halt(goto)::current location: " + location + ", next location: " + registers.data[one] + ", snapshot == register[" + two + "]: " + registers.data[two] + ", goto_count: " + goto_count);
               halt = true;
             }
             // only go to the location in register at 1 if everything is ok
             else
             {
-              // take a snapshot of the instruction at the location contained in
-              // register at 1
-              snap_words[registers.data[one]] =
-                Integer.parseInt(ram.words[registers.data[one]]);
-              // take a snapshot of all registers
-              snap_registers = (Registers)registers.clone();
-              snap_taken = true;
+              // System.out.println("snapshot::current location: " + location + ", next location: " + registers.data[one] + ", saving register[" + two + "]: " + registers.data[two]);
+              goto_register_2 = registers.data[two];
+              goto_count++;
 
               // go to the location in register at 1
               location = registers.data[one];
             }
           }
-          // if the current location is beyond the current set of instructions,
+          // if the next location is beyond the current set of instructions,
           // halt the program
-          else if (location >= ram.count && ram.words[location].equals("000"))
+          else if (!instructions.data.containsKey(location+1))
+          {
+            // System.out.println("halt(RAM)::next location (" + (location+1) + ") not in RAM");
             halt = true;
+          }
           // otherwise, go to the next location
           else
             location++;
@@ -193,7 +166,10 @@ class skiena_1_6_6
         case 1:
           // 100 means halt
           if (one == 0 && two == 0)
+          {
+            // System.out.println("exit(100)");
             halt = true;
+          }
           // all other 1xx instructions are invalid, so ignore them and move on
           // to the next instruction
           else
@@ -230,22 +206,24 @@ class skiena_1_6_6
           location++;
           break;
         case 8:
-          // set register at 1 to the value in RAM whose address is in register
+          // set register at 1 to the value in Instructions whose address is in register
           // at 1. So: first, fetch the content of register at 2, which is an
-          // address. then, go to the address location in RAM and fetch the
+          // address. then, go to the address location in Instructions and fetch the
           // instruction there and store it in register at 1.
-          registers.data[one] = Integer.parseInt(ram.words[registers.data[two]]);
+          registers.data[one] = Integer.parseInt(instructions.get(registers.data[two]));
           location++;
           break;
         case 9:
-          // set the value in RAM whose address is in register at 2 to that of
-          // register at 1. So first, go to the address location in RAM
-          // contained in register at 2, then change the word at that location
+          // set the value in Instructions whose address is in register at 2 to that of
+          // register at 1. So first, go to the address location in Instructions
+          // contained in register at 2, then change the instruction at that location
           // to the content of register at 1
-          ram.words[registers.data[two]] = String.format("%03d", registers.data[one]);
+          instructions.data.put(registers.data[two], String.format("%03d", registers.data[one]));
+          // System.out.println("RAM-write::instruction: " + instruction + ", register[" + two + "]/address: " + registers.data[two] + ", register[" + one + "]/value: " + registers.data[one]);
           location++;
           break;
         }
+        // keep track of the number of executed instructions
         execution_count++;
       }
 
@@ -256,7 +234,7 @@ class skiena_1_6_6
 
   public static void main(String[] args)
   {
-    List<RAM> list = input();
+    List<Instructions> list = input();
     output(list);
   }
 }
