@@ -2,20 +2,20 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include <sstream>  // stringstream
 #include <iomanip>  // setfill(), setw()
 using namespace std;
 
-#define MAX_WORDS 1000
-class RAM
+class Instructions
 {
 public:
-  // "words" is a field of 1000 instruction words, each containing 3 digits.
+  // "data" is a field of 1000 instruction words, each containing 3 digits.
   // Even when the instruction words given in input don't fill all 1000 address
   // locations, the unused portion must still be available and initialized to
-  // "000", because the instruction 9xx will attempt to override a word
+  // "000", because the instruction 9xx will attempt to override a instruction
   // instruction at address so-and-so with some value that is beyond the number
-  // of words from input. consideration for selecting a type for "words":
+  // of words from input. consideration for selecting a type for "data":
   // (1) a vector of char[] was rejected because a vector element must be
   //   an object type to allow copying and assignment, whereas a char[]
   //   is not an object
@@ -26,25 +26,22 @@ public:
   //   converting to and from char[] and String
   // (4) an array of String was chosen because of the convenience in assigning,
   //   format printing, etc.
-  string words[MAX_WORDS];
-
-  // count of all instruction words read from input
-  int count;
+  map<int, string> data;
 
 public:
-  RAM()
-  {
-    for (int i = 0; i < MAX_WORDS; i++)
-      words[i] = "000";
-    count = 0;
-  }
+  Instructions() {}
 
   operator string()
   {
     string builder;
-    for (int i = 0; i < count; i++)
-      builder.append(words[i]).append("\n");
+    for (map<int, string>::iterator it = data.begin(); it != data.end(); it++)
+      builder.append(it->second).append("\n");
     return builder;
+  }
+
+  string get(int index)
+  {
+    return data.find(index) == data.end() ? "000" : data.find(index)->second;
   }
 };
 
@@ -81,37 +78,23 @@ public:
       data[i] = rhs.data[i];
     return *this;
   }
-
-  // this method tells whether within the next 10 read's the current value will
-  // become zero. this is a hack (10 was chosen at random) to prevent an
-  // infinite loop.
-  static bool approaching_zero(int previous, int current)
-  {
-    int diff = current - previous;
-    int tmp = current;
-    for (int i = 0; i < 10 && current != 0; i++)
-      current += diff;
-    return current == 0;
-  }
 };
 
-vector<RAM> input()
+vector<Instructions> input()
 {
-  // number of cases
-  // char line[80];
+  // read number of cases
   string line;
   getline(cin, line);
-  // cin.getline(line, 80);
   int case_count = stoi(line);
 
   // skip the blank line following the number of cases
   getline(cin, line);
-  // cin.getline(line, 80);
 
-  vector<RAM> list;
+  vector<Instructions> list;
   for (int i = 0; i < case_count; i++)
   {
-    RAM ram;
+    Instructions instructions;
+    int index = 0;
 
     // read until end of input
     while (getline(cin, line))
@@ -122,23 +105,22 @@ vector<RAM> input()
       else
       {
         // fetch the 3-digit instruction
-        ram.words[ram.count] = line;
-        ram.count++;
+        instructions.data[index] = line;
+        index++;
       }
     }
     // retain the current set of instructions
-    list.push_back(ram);
+    list.push_back(instructions);
   }
   return list;
 }
 
-void output(vector<RAM>& list)
+void output(vector<Instructions>& list)
 {
-  for (vector<RAM>::iterator it = list.begin(); it != list.end(); it++)
+  for (vector<Instructions>::iterator it = list.begin(); it != list.end(); it++)
   {
-    // snapshot of all 1000 instructions and 10 registers
-    string snap_words[1000];
-    Registers snap_registers;
+    // snapshot of instructions
+    map<int, string> snap_instructions;
     bool snap_taken = false;
 
     Registers registers;
@@ -152,16 +134,17 @@ void output(vector<RAM>& list)
     while (halt == false)
     {
       // current instruction word based on location
-      string word = it->words[location];
-      // cout << "location: " << location << ", word: " << word.c_str() << ", registers: " << registers.operator string() << endl;
-      // the digits at location 0, 1, and 2 inside the current instruction word
-      int zero = word[0] - '0';
-      int one = word[1] - '0';
-      int two = word[2] - '0';
+      string instruction = it->get(location);
+      // cout << "location: " << location << ", instruction: " << instruction.c_str() << ", registers: " << registers.operator string() << endl;
+      // the digits at location 0, 1, and 2 inside the current instruction instruction
+      int zero = instruction[0] - '0';
+      int one = instruction[1] - '0';
+      int two = instruction[2] - '0';
       switch (zero)
       {
       // special and troublesome case
       case 0:
+        // cout << "location: " << location << ", instruction: " << instruction << ", register[" << one << "]: " << registers.data[one] << ", register[" << two << "]: " << registers.data[two] << endl;
         // if register at 2 does not contain 0
         if (registers.data[two] != 0)
         {
@@ -170,38 +153,35 @@ void output(vector<RAM>& list)
           // one step to the next location
           if (location == registers.data[one])
           {
-            cout << "repeat::location: " << location << ", word: " << word << ", register[" << one << "]: " << registers.data[one] << endl;
+            // cout << "repeat::location: " << location << ", instruction: " << instruction << ", register[" << one << "]: " << registers.data[one] << endl;
             location++;
           }
           // if the instruction at the location contained in register at 1
           // hasn't changed between the last GOTO instruction (0xx) and now,
           // then we have another infinite loop. In that case, halt the program
           else if (snap_taken &&
-            snap_words[registers.data[one]] == it->words[registers.data[one]]) // &&
-            // !Registers::approaching_zero(snap_registers.data[two], registers.data[two]))
+            snap_instructions.find(registers.data[one])->second == it->get(registers.data[one]))
           {
-            cout << "GOTO::location: " << location << ", word: " << word << ", register[" << one << "]: " << registers.data[one] << ", words[" << registers.data[one] << "]: " << it->words[registers.data[one]] << endl;
+            // cout << "halt(goto)::location: " << location << ", instruction: " << instruction << ", register[" << one << "]/next location: " << registers.data[one] << ", instruction[" << registers.data[one] << "]/snap-instruction: " << it->get(registers.data[one]) << endl;
             halt = true;
           }
           // only go to the location in register at 1 if everything is ok
           else
           {
-            cout << "snapshot::word: " << word << ", register[" << one << "]: " << registers.data[one] << ", words[" << registers.data[one] << "]: " << it->words[registers.data[one]] << endl;
+            // cout << "snapshot::instruction: " << instruction << ", register[" << one << "]: " << registers.data[one] << ", instructions[" << registers.data[one] << "]: " << it->get(registers.data[one]) << endl;
             // take a snapshot of the instruction at the location contained in
             // register at 1
-            snap_words[registers.data[one]] = it->words[registers.data[one]];
-            // take a snapshot of all registers
-            snap_registers = registers;
+            snap_instructions[registers.data[one]] = it->get(registers.data[one]);
             snap_taken = true;
             // go to the location in register at 1
             location = registers.data[one];
           }
         }
-        // if the current location is beyond the current set of instructions,
+        // if the next location is beyond the current set of instructions,
         // halt the program
-        else if (location >= it->count && it->words[location] == "000")
+        else if (it->data.find(location+1) == it->data.end())
         {
-          cout << "beyond::word: " << word << ", location: " << location << endl;
+          // cout << "halt(RAM)::next location (" << (location+1) << ") not in RAM" << endl;
           halt = true;
         }
         // otherwise, go to the next location
@@ -212,7 +192,7 @@ void output(vector<RAM>& list)
         // 100 means halt
         if (one == 0 && two == 0)
         {
-          cout << "exit::word: " << word << endl;
+          // cout << "exit(100)" << endl;
           halt = true;
         }
         // all other 1xx instructions are invalid, so ignore them and move on
@@ -255,21 +235,21 @@ void output(vector<RAM>& list)
         // at 2. So: first, fetch the content of register at 2, which is an
         // address. then, go to the address location in RAM and fetch the
         // instruction there and store it in register at 1.
-        registers.data[one] = stoi(it->words[registers.data[two]]);
+        registers.data[one] = stoi(it->get(registers.data[two]));
         location++;
         break;
       case 9:
         {
           // set the value in RAM whose address is in register at 2 to that of
           // register at 1. So first, go to the address location in RAM
-          // contained in register at 2, then change the word at that location
-          // to the content of register at 1
+          // contained in register at 2, then change the instruction at that
+          // location to the content of register at 1
           // pure C++: use of stringstream, setfill() and setw() to replace sprintf()
           stringstream stream;
           stream << setfill('0') << setw(3) << registers.data[one];
-          it->words[registers.data[two]] = stream.str();
-          cout << "RAM-writing::word: " << word << ", register[" << two << "]/address: " << registers.data[two] << ", register[" << one << "]/value: " << registers.data[one] << endl;
-          // sprintf(it->words[registers.data[two]], "%03d", registers.data[one]);
+          it->data[registers.data[two]] = stream.str();
+          // cout << "RAM-write::instruction: " << instruction << ", register[" << two << "]/address: " << registers.data[two] << ", register[" << one << "]/value: " << registers.data[one] << endl;
+          // sprintf(it->instructions[registers.data[two]], "%03d", registers.data[one]);
           location++;
           break;
         }
@@ -284,6 +264,6 @@ void output(vector<RAM>& list)
 
 int main()
 {
-  vector<RAM> list = input();
+  vector<Instructions> list = input();
   output(list);
 }
