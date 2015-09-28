@@ -28,7 +28,7 @@ class Board
   String[] data = new String[MAX_SIDE];
 
   // this method checks to see if the current board contains 8 rows of "........"
-  boolean isEmpty()
+  boolean is_empty()
   {
     for (String string : data)
       if (!string.equals("........"))
@@ -38,7 +38,7 @@ class Board
 
   // this method finds a king (k or K) from board and returns the location of
   // the king
-  Location findKing(char king)
+  Location find_king(char king)
   {
     int i, j = 0;
     for (i = 0; i < MAX_SIDE; i++)
@@ -189,7 +189,7 @@ class skiena_1_6_7
         board.data[i] = scanner.nextLine();
 
       // exit loop if current board is empty (containing 8 lines of "........")
-      if (board.isEmpty())
+      if (board.is_empty())
         break;
       else
       {
@@ -238,7 +238,7 @@ class skiena_1_6_7
       // directions, 2 knights and 2 pawns (in 8 positions)
       for (int i = 0; i < kings.length; i++)
       {
-        Location location = board.findKing(kings[i]);
+        Location location = board.find_king(kings[i]);
         // System.out.println(kings[i] + " is at " + location);
 
         King king = new King(board, location);
