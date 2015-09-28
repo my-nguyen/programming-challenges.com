@@ -52,7 +52,7 @@ pawn can capture another piece.
 Input
 There will be an arbitrary number of board configurations in the input, each
 consisting of eight lines of eight characters each. A "." denotes an empty
-square, while upperand lowercase letters represent the pieces as defined above.
+square, while upper and lowercase letters represent the pieces as defined above.
 There will be no invalid characters and no configurations where both kings are
 in check. You must read until you find an empty board consisting only of "."
 characters, which should not be processed. There will be an empty line between
