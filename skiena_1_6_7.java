@@ -1,5 +1,6 @@
 import java.util.*;
 
+// this class represents the location of a chess piece or a square on a board
 class Location
 {
   int row;
@@ -20,12 +21,13 @@ class Location
   }
 }
 
+// this class represents a chess board
 class Board
 {
   static final int MAX_SIDE = 8;
   String[] data = new String[MAX_SIDE];
 
-  // this method checks to see if the current board is empty
+  // this method checks to see if the current board contains 8 rows of "........"
   boolean isEmpty()
   {
     for (String string : data)
@@ -57,15 +59,19 @@ class Board
   }
 }
 
+// this class represents a blocker, whether it's a threat or a block (which is
+// either a harmless hostile or a friendly). it contains information pertaining
+// to the blocker such as its id (chess piece), its location and whether it's a
+// threat or not.
 class Blocker
 {
-  char piece;
+  char id;
   Location location;
   boolean is_enemy;
 
   Blocker(char pi, Location loc, boolean enemy)
   {
-    piece = pi;
+    id = pi;
     location = loc;
     is_enemy = enemy;
   }
@@ -74,15 +80,17 @@ class Blocker
   {
     StringBuilder builder = new StringBuilder();
     builder.append(is_enemy ? "checked" : "blocked");
-    builder.append(" by ").append(piece).append(" at ").append(location);
+    builder.append(" by ").append(id).append(" at ").append(location);
     return builder.toString();
   }
 }
 
+// this class represents a king on a chess board
 class King
 {
   Board board;
   Location location;
+
   King(Board bd, Location loc)
   {
     board = bd;
@@ -105,7 +113,7 @@ class King
     else
       column_condition = true;
 
-    // both row and column must be within bounds
+    // whether both row and column are within bounds
     return row_condition && column_condition;
   }
 
@@ -113,9 +121,9 @@ class King
   // diagonal directions for the first threat (an opponent Queen, Rook or Bishop)
   // or a block (a friendly or a harmless opponent which may or may not be in
   // the way of a threat). if a threat or a block is found, the blocker is
-  // returned; the blocker contains information such as: what chess piece it is,
-  // its location on the chess board, and whether it's a threat or a block. if
-  // no such threat or block is found, a null is returned.
+  // returned; the blocker contains information such as: the id of the chess
+  // piece, its location on the chess board, and whether it's a threat or a
+  // block. if no such threat or block is found, a null is returned.
   Blocker scan_8_directions(int row_increment, int column_increment, String straight_enemies)
   {
     Blocker blocker = null;
@@ -202,7 +210,7 @@ class skiena_1_6_7
     for (int l = 0; l < list.size(); l++)
     {
       Board board = list.get(l);
-      System.out.print("\nBOARD:\n" + board);
+      // System.out.print("\nBOARD:\n" + board);
 
       // black king (k) at index 0 and white king (K) at index 1. the kings'
       // index will determine the placement of their correponding opponents (QR,
@@ -222,17 +230,20 @@ class skiena_1_6_7
       int[] pawn_increments = { 1, -1 };
       char[] knights = { 'N', 'n' };
       String[] names = { "black", "white" };
+      // master list of all blockers of both kings.
+      // Java doesn't allow array of List, so must declare the array as follows
+      List<List<Blocker>> obstructors = new ArrayList<List<Blocker>>();
       // go thru both kings. for each king, scan for 12 possible blockers: 4 in
       // the straight directions (north, south, east, west), 4 in diagonal
       // directions, 2 knights and 2 pawns (in 8 positions)
       for (int i = 0; i < kings.length; i++)
       {
         Location location = board.findKing(kings[i]);
-        System.out.println(kings[i] + " is at " + location);
+        // System.out.println(kings[i] + " is at " + location);
 
         King king = new King(board, location);
+        // list of all blockers of the current king
         List<Blocker> blockers = new ArrayList<>();
-        int[] increments = { 1, -1 };
 
         // scan up and down for opponent Queen and Rook
         blockers.add(king.scan_8_directions(1, 0, straight_enemies[i]));
@@ -261,26 +272,39 @@ class skiena_1_6_7
         blockers.add(king.scan_pawn_knight(-1, 2, knights[i]));
         blockers.add(king.scan_pawn_knight(-1, -2, knights[i]));
 
-        // report on the blockers
+        // report on the blockers for debugging
+        /*
         for (Blocker blocker : blockers)
           if (blocker != null)
             System.out.println(kings[i] + " is " + blocker);
+        */
 
-        // report as per problem requirement
-        boolean checked = false;
-        System.out.print("Game #" + i + ": ");
-        for (Blocker blocker : blockers)
+        obstructors.add(blockers);
+      } // for loop ({ 'k', 'K' })
+
+      // report as per problem requirement
+      boolean checked = false;
+      System.out.print("Game #" + (l+1) + ": ");
+      for (int i = 0; i < kings.length; i++)
+      {
+        for (Blocker blocker : obstructors.get(i))
+        {
           if (blocker != null && blocker.is_enemy)
           {
-            System.out.println(names[i] + " king is in check");
+            System.out.println(names[i] + " king is in check.");
             checked = true;
             break;
           }
-        if (!checked)
-          System.out.println("no king is in check");
+        }
+        // one king is in check. since there is "no configurations where both
+        // kings are check", there's no need to examine the other king.
+        if (checked)
+          break;
       }
-    }
-  }
+      if (!checked)
+        System.out.println("no king is in check.");
+    } // for loop(List<Board> list)
+  } // output() method
 
   public static void main(String[] args)
   {
