@@ -33,7 +33,7 @@ class Ballot
     while (it.hasNext())
     {
       int choice = it.next();
-      for (int index : losers_indices.data)
+      for (int index : losers_indices.list)
         if (choice == index)
           it.remove();
     }
@@ -42,19 +42,19 @@ class Ballot
 
 class BallotList
 {
-  List<Ballot> data = new ArrayList<>();
+  List<Ballot> list = new ArrayList<>();
 
   public String toString()
   {
     StringBuilder builder = new StringBuilder();
-    for (Ballot ballot : data)
+    for (Ballot ballot : list)
       builder.append(" ").append(ballot);
     return builder.toString();
   }
 
   void remove_ballots(Indices losers_indices)
   {
-    for (Ballot ballot : data)
+    for (Ballot ballot : list)
       ballot.remove_votes(losers_indices);
   }
 
@@ -63,7 +63,7 @@ class BallotList
   BallotList extract_ballots(int choice)
   {
     BallotList extract = new BallotList();
-    Iterator<Ballot> it = data.iterator();
+    Iterator<Ballot> it = list.iterator();
     while (it.hasNext())
     {
       Ballot ballot = it.next();
@@ -71,7 +71,7 @@ class BallotList
       if (ballot.choices.get(0) == choice)
       {
         // retain this ballot for the current candidate
-        extract.data.add(ballot);
+        extract.list.add(ballot);
         // remove the ballot from the list of ballots
         it.remove();
       }
@@ -93,9 +93,9 @@ class Candidate
 
   void add_ballots(BallotList new_ballots)
   {
-    if (ballots.data.size() != 0)
-      for (Ballot ballot : new_ballots.data)
-        ballots.data.add(ballot);
+    if (ballots.list.size() != 0)
+      for (Ballot ballot : new_ballots.list)
+        ballots.list.add(ballot);
   }
 
   void remove_ballots(Indices indices)
@@ -107,7 +107,7 @@ class Candidate
   {
     StringBuilder builder = new StringBuilder();
     builder.append("<").append(name).append("> ");
-    builder.append(Integer.toString(ballots.data.size())).append(" ballots\n");
+    builder.append(Integer.toString(ballots.list.size())).append(" ballots\n");
     builder.append(ballots);
     return builder.toString();
   }
@@ -115,12 +115,12 @@ class Candidate
 
 class CandidateList
 {
-  List<Candidate> data = new ArrayList<>();
+  List<Candidate> list = new ArrayList<>();
 
   public String toString()
   {
     StringBuilder builder = new StringBuilder();
-    for (Candidate candidate : data)
+    for (Candidate candidate : list)
       builder.append(candidate);
     return builder.toString();
   }
@@ -129,12 +129,12 @@ class CandidateList
   // the total ballot count
   Candidate find_winner(int ballot_count)
   {
-    for (int i = 0; i < data.size(); i++)
+    for (int i = 0; i < list.size(); i++)
     {
-      Candidate candidate = data.get(i);
-      // System.out.println("total ballots: " + ballot_count + ", candidate: " + (i+1) + ", ballot count: " + candidate.ballots.data.size());
+      Candidate candidate = list.get(i);
+      // System.out.println("total ballots: " + ballot_count + ", candidate: " + (i+1) + ", ballot count: " + candidate.ballots.list.size());
       // look for candidate with ballot count more than 50% of the total votes
-      if (candidate.ballots.data.size() / (float)ballot_count >= .5)
+      if (candidate.ballots.list.size() / (float)ballot_count >= .5)
         return candidate;
     }
     return null;
@@ -144,9 +144,9 @@ class CandidateList
   int min_vote_count()
   {
     int min_vote_count = Integer.MAX_VALUE;
-    for (Candidate candidate : data)
+    for (Candidate candidate : list)
     {
-      int vote_count = candidate.ballots.data.size();
+      int vote_count = candidate.ballots.list.size();
       if (vote_count != 0)
         if (vote_count < min_vote_count)
           min_vote_count = vote_count;
@@ -175,11 +175,11 @@ class CandidateList
   Indices min_vote_indices(int min_vote_count)
   {
     Indices indices = new Indices();
-    for (int i = 0; i < data.size(); i++)
+    for (int i = 0; i < list.size(); i++)
     {
       // a candidate whose vote counts equals the minimum vote count
-      if (data.get(i).ballots.data.size() == min_vote_count)
-        indices.data.add(i + 1);
+      if (list.get(i).ballots.list.size() == min_vote_count)
+        indices.list.add(i + 1);
     }
     return indices;
   }
@@ -189,9 +189,9 @@ class CandidateList
   BallotList ballots()
   {
     BallotList ballots = new BallotList();
-    for (Candidate candidate : data)
-      for (Ballot ballot : candidate.ballots.data)
-        ballots.data.add(ballot);
+    for (Candidate candidate : list)
+      for (Ballot ballot : candidate.ballots.list)
+        ballots.list.add(ballot);
 
     return ballots;
   }
@@ -199,9 +199,9 @@ class CandidateList
   // this method adds a new list of ballots into the current list of candidates
   void add_ballots(BallotList ballots)
   {
-    for (int i = 0; i < data.size(); i++)
+    for (int i = 0; i < list.size(); i++)
     {
-      Candidate candidate = data.get(i);
+      Candidate candidate = list.get(i);
       // add all ballots whose first vote is the current candidate to the
       // candidate's list of current ballots
       candidate.add_ballots(ballots.extract_ballots(i + 1));
@@ -210,15 +210,15 @@ class CandidateList
 
   void remove_ballots(Indices indices)
   {
-    for (Candidate candidate : data)
+    for (Candidate candidate : list)
       candidate.remove_ballots(indices);
   }
 
   // this method removes all ballots for each candidate in the list of candidates
   void eliminate()
   {
-    for (Candidate candidate : data)
-      candidate.ballots.data.clear();
+    for (Candidate candidate : list)
+      candidate.ballots.list.clear();
   }
 
   // this method goes thru the current list of candidates to find those whose
@@ -227,10 +227,10 @@ class CandidateList
   CandidateList losers(Indices losers_indices)
   {
     CandidateList losers = new CandidateList();
-    for (int i = 0; i < data.size(); i++)
-      for (int j : losers_indices.data)
+    for (int i = 0; i < list.size(); i++)
+      for (int j : losers_indices.list)
         if (i+1 == j)
-          losers.data.add(data.get(i));
+          losers.list.add(list.get(i));
     return losers;
   }
 }
@@ -247,7 +247,7 @@ class Poll
     for (String name : names)
       builder.append(" <").append(name).append(">\n");
 
-    builder.append(Integer.toString(ballots.data.size())).append(" ballots:\n");
+    builder.append(Integer.toString(ballots.list.size())).append(" ballots:\n");
     builder.append(ballots);
     return builder.toString();
   }
@@ -257,13 +257,16 @@ class Poll
 // convenience of printing by way of method toString()
 class Indices
 {
-  List<Integer> data = new ArrayList<>();
+  List<Integer> list = new ArrayList<>();
 
   public String toString()
   {
     StringBuilder builder = new StringBuilder();
-    for (int index : data)
-      builder.append(" ").append(Integer.toString(index));
+    builder.append("[");
+    for (int index : list)
+      builder.append(Integer.toString(index)).append(" ");
+    builder.deleteCharAt(builder.length()-1);
+    builder.append("]");
     return builder.toString();
   }
 }
@@ -297,7 +300,7 @@ class skiena_1_6_8
         if (line.length() == 0)
           break;
         else
-          poll.ballots.data.add(new Ballot(line));
+          poll.ballots.list.add(new Ballot(line));
       }
 
       list.add(poll);
@@ -314,7 +317,7 @@ class skiena_1_6_8
     {
       // System.out.print("POLL\n" + poll);
       CandidateList candidates = new CandidateList();
-      int ballot_count = poll.ballots.data.size();
+      int ballot_count = poll.ballots.list.size();
 
       // for each name in the current poll
       for (int j = 0; j < poll.names.size(); j++)
@@ -328,7 +331,7 @@ class skiena_1_6_8
 
         // System.out.print("Candidate " + (j+1) + ": " + candidate);
         // save the candidate
-        candidates.data.add(candidate);
+        candidates.list.add(candidate);
       }
 
       // keep looking for a winner, one with more than 50% of the vote
@@ -341,7 +344,7 @@ class skiena_1_6_8
         // obtain the position (index) of the candidates with the lowest number
         // of votes.
         Indices losers_indices = candidates.min_vote_indices(min_vote_count);
-        // System.out.println("Losers' indices:" + losers_indices);
+        // System.out.println("Losers' indices: " + losers_indices);
         // collect all actual candidates with the lowest number of votes.
         CandidateList losers = candidates.losers(losers_indices);
         // System.out.print("Losers:\n" + losers);

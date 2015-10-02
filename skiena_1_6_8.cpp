@@ -1,4 +1,4 @@
-// compile: g++ -std=c++11 skiena_1_6_7.cpp (to enable std::to_string())
+// compile: g++ -std=c++11 skiena_1_6_8.cpp (to enable std::to_string())
 #include <iostream>
 #include <vector>
 #include <string>
@@ -16,8 +16,11 @@ public:
   operator string()
   {
     string builder;
+    builder.append("[");
     for (vector<int>::iterator it = list.begin(); it != list.end(); it++)
-      builder.append(" ").append(to_string(*it+1));
+      builder.append(to_string(*it+1)).append(" ");
+    builder.pop_back();
+    builder.append("]");
     return builder;
   }
 };
@@ -453,7 +456,7 @@ void output(vector<Poll>& list)
       // collect all actual candidates with the lowest number of votes.
       CandidatePointers losing_candidates = all_candidates.min_vote_candidates(min_vote_count);
       Indices losers_indices = losing_candidates.indices();
-      // cout << "Losers' indices:" << losers_indices.operator string() << endl;
+      // cout << "Losers' indices: " << losers_indices.operator string() << endl;
       // cout << "Losers:" << endl << losing_candidates.operator string();
       // collect all ballots belonging to the losing candidates
       BallotPointers losers_ballots = losing_candidates.all_ballots();
