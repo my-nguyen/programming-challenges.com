@@ -114,18 +114,54 @@ class CandidateList
     builder
   end
 
-  # this method finds a candidate whose total ballot count is more than 50% of
-  # the total ballot count
-  def find_winner(ballot_count)
-    @list.each_index do |i|
-      candidate = @list[i]
-      # puts("total ballots: #{ballot_count}, candidate: #{(i+1)}, ballot count: #{candidate.ballots.list.size}")
-      # look for candidate with ballot count more than 50% of the total votes
-      if (candidate.ballots.list.size / ballot_count.to_f >= 0.5)
-        return candidate
+  # this method looks in the list of remaining candidates and checks if they
+  # are all of the same size. if so they are collected into a list and returned
+  # otherwise null is returned.
+  def unisize
+    # look for the first candidate with non-zero ballots
+    i = 0
+    while (i < list.size && list[i].ballots.list.size == 0)
+      i += 1
+    end
+    result = []
+    size = list[i].ballots.list.size
+    result << list[i]
+
+    # look in the rest of list of candidates
+    (i+1).upto(list.size-1) do |j|
+      if (list[j].ballots.list.size != 0)
+        # if any candidate doesn't have the same size, return an empty list
+        if (list[j].ballots.list.size != size)
+          return nil
+        # if another candidate is of the same size, it is collected
+        else
+          result << list[j]
+        end
       end
     end
-    nil
+
+    result
+  end
+
+  # this method finds a candidate whose total ballot count is more than 50% of
+  # the total ballot count
+  # class Candidates
+  def find_winners(ballot_count)
+    result = unisize
+    # not all remaining candidates have the same size
+    if (result == nil)
+      list.size.times do |i|
+        candidate = @list[i]
+        # puts("Total ballots: #{ballot_count}, candidate: #{(i+1)}, ballot count: #{candidate.ballots.list.size}")
+        # look for candidate with ballot count more than 50% of the total votes
+        if (candidate.ballots.list.size / ballot_count.to_f >= 0.5)
+          result = []
+          result << candidate
+          break
+        end
+      end
+    end
+    result
   end
 
   # this method returns the lowest number of votes among all candidates
@@ -292,6 +328,26 @@ def input
   list
 end
 
+def reshuffle(candidates, vote_count)
+  # obtain the position (index) of the candidates with the lowest number
+  # of votes.
+  losers_indices = candidates.min_vote_indices(vote_count)
+  # puts("Losers' indices: #{losers_indices}")
+  # collect all actual candidates with the lowest number of votes.
+  losers = candidates.losers(losers_indices)
+  # print("Losers:\n#{losers}")
+  # collect all ballots belonging to these candidates
+  losers_ballots = losers.ballots()
+  # print("Losers' ballots, pre-removal:\n#{losers_ballots}")
+  # eliminate these candidates from these ballots
+  candidates.remove_ballots(losers_indices)
+  # print("Losers' ballots, post-removal:\n#{losers_ballots}")
+  # recount the ballots in favor of their highest-ranked non-eliminated
+  # candidate
+  candidates.add_ballots(losers_ballots)
+  losers
+end
+
 def output(list)
   # reminder: a Poll is a list of names and of ballots
   list.each do |poll|
@@ -313,34 +369,27 @@ def output(list)
       candidates.list << candidate
     end
 
+    reshuffle(candidates, 0)
+
     # keep looking for a winner, one with more than 50% of the vote
-    winner = candidates.find_winner(ballot_count)
-    while (winner == nil)
+    winners = candidates.find_winners(ballot_count)
+    while (winners == nil)
       # begin the process of elimination: start by looking for the lowest
       # number of votes received by each candidate
       min_vote_count = candidates.min_vote_count()
-      # obtain the position (index) of the candidates with the lowest number
-      # of votes.
-      losers_indices = candidates.min_vote_indices(min_vote_count)
-      # puts("Losers' indices: #{losers_indices}")
-      # collect all actual candidates with the lowest number of votes.
-      losers = candidates.losers(losers_indices)
-      # print("Losers:\n#{losers}")
-      # collect all ballots belonging to these candidates
-      losers_ballots = losers.ballots()
-      # print("All losers' ballots:\n#{losers_ballots}")
-      # eliminate these candidates from these ballots
-      candidates.remove_ballots(losers_indices)
-      # print("All losers' ballots, refreshed:\n#{losers_ballots}")
-      # recount the ballots in favor of their highest-ranked non-eliminated
-      # candidate
-      candidates.add_ballots(losers_ballots)
+      losers = reshuffle(candidates, min_vote_count)
       # eliminate these candidates from the voting poll
       losers.eliminate()
       # keep looking for a winner
-      winner = candidates.find_winner(ballot_count)
+      winners = candidates.find_winners(ballot_count)
     end
-    puts(winner.name)
+
+    # print the winners' name, as per problem spec
+    winners.each do |winner|
+      puts winner.name
+    end
+    # blank line to separate consecutive cases, as per problem spec
+    puts
   end
 end
 
