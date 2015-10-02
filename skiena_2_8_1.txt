@@ -13,7 +13,7 @@ a jolly jumper.Write a program to determine whether each of a number of
 sequences is a jolly jumper.
 
 Input
-Each line of input contains an integer n < 3, 000 followed by n integers
+Each line of input contains an integer n < 3,000 followed by n integers
 representing the sequence.
 
 Output
