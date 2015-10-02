@@ -344,7 +344,7 @@ class skiena_1_6_8
         // System.out.println("Losers' indices:" + losers_indices);
         // collect all actual candidates with the lowest number of votes.
         CandidateList losers = candidates.losers(losers_indices);
-        // System.out.print("Losers: " + losers);
+        // System.out.print("Losers:\n" + losers);
         // collect all ballots belonging to these candidates
         BallotList losers_ballots = losers.ballots();
         // System.out.print("All losers' ballots:\n" + losers_ballots);
