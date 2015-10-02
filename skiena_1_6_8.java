@@ -125,19 +125,54 @@ class CandidateList
     return builder.toString();
   }
 
+  // this method looks in the list of remaining candidates and checks if they
+  // are all of the same size. if so they are collected into a list and returned
+  // otherwise null is returned.
+  List<Candidate> unisize()
+  {
+    // look for the first candidate with non-zero ballots
+    int i = 0;
+    while (i < list.size() && list.get(i).ballots.list.size() == 0)
+      i++;
+    List<Candidate> result = new ArrayList<Candidate>();
+    int size = list.get(i).ballots.list.size();
+    result.add(list.get(i));
+
+    // look in the rest of list of candidates
+    for (int j = i+1; j < list.size(); j++)
+      if (list.get(j).ballots.list.size() != 0)
+        // if any candidate doesn't have the same size, null is returned
+        if (list.get(j).ballots.list.size() != size)
+          return null;
+        // if another candidate is of the same size, it is collected
+        else
+          result.add(list.get(j));
+
+    return result;
+  }
+
   // this method finds a candidate whose total ballot count is more than 50% of
   // the total ballot count
-  Candidate find_winner(int ballot_count)
+  List<Candidate> find_winners(int ballot_count)
   {
-    for (int i = 0; i < list.size(); i++)
+    List<Candidate> result = unisize();
+    // not all remaining candidates have the same size
+    if (result == null)
     {
-      Candidate candidate = list.get(i);
-      // System.out.println("total ballots: " + ballot_count + ", candidate: " + (i+1) + ", ballot count: " + candidate.ballots.list.size());
-      // look for candidate with ballot count more than 50% of the total votes
-      if (candidate.ballots.list.size() / (float)ballot_count >= .5)
-        return candidate;
+      for (int i = 0; i < list.size(); i++)
+      {
+        Candidate candidate = list.get(i);
+        // System.out.println("Total ballots: " + ballot_count + ", candidate: " + (i+1) + ", ballot count: " + candidate.ballots.list.size());
+        // look for candidate with ballot count more than 50% of the total votes
+        if (candidate.ballots.list.size() / (float)ballot_count >= .5)
+        {
+          result = new ArrayList<>();
+          result.add(candidate);
+          break;
+        }
+      }
     }
-    return null;
+    return result;
   }
 
   // this method returns the lowest number of votes among all candidates
@@ -273,7 +308,7 @@ class Indices
 
 class skiena_1_6_8
 {
-  private static List<Poll> input()
+  static List<Poll> input()
   {
     List<Poll> list = new ArrayList<>();
     Scanner scanner = new Scanner(System.in);
@@ -310,7 +345,34 @@ class skiena_1_6_8
     return list;
   }
 
-  private static void output(List<Poll> list)
+  // this method does the bulk of the processing as follows:
+  // (1) looks for candidates with the lowest number of votes;
+  // (2) collects all ballots belonging to those candidates;
+  // (3) removes these candidates' votes from the master list of all ballots;
+  // (4) recounts the ballots in favor of their highest-ranked non-eliminated
+  //     candidate
+  static CandidateList reshuffle(CandidateList candidates, int vote_count)
+  {
+    // obtain the position (index) of the candidates with the lowest number
+    // of votes.
+    Indices losers_indices = candidates.min_vote_indices(vote_count);
+    // System.out.println("Losers' indices: " + losers_indices);
+    // collect all actual candidates with the lowest number of votes.
+    CandidateList losers = candidates.losers(losers_indices);
+    // System.out.print("Losers:\n" + losers);
+    // collect all ballots belonging to these candidates
+    BallotList losers_ballots = losers.ballots();
+    // System.out.print("Losers' ballots, pre-removal:\n" + losers_ballots);
+    // eliminate these candidates from these ballots
+    candidates.remove_ballots(losers_indices);
+    // System.out.print("Losers' ballots, post-removal:\n" + losers_ballots);
+    // recount the ballots in favor of their highest-ranked non-eliminated
+    // candidate
+    candidates.add_ballots(losers_ballots);
+    return losers;
+  }
+
+  static void output(List<Poll> list)
   {
     // reminder: a Poll is a list of names and of ballots
     for (Poll poll : list)
@@ -334,35 +396,29 @@ class skiena_1_6_8
         candidates.list.add(candidate);
       }
 
+      // first, eliminate those candidates who have no ballots
+      reshuffle(candidates, 0);
+
       // keep looking for a winner, one with more than 50% of the vote
-      Candidate winner = candidates.find_winner(ballot_count);
-      while (winner == null)
+      List<Candidate> winners = candidates.find_winners(ballot_count);
+      while (winners == null)
       {
         // begin the process of elimination: start by looking for the lowest
         // number of votes received by each candidate
         int min_vote_count = candidates.min_vote_count();
-        // obtain the position (index) of the candidates with the lowest number
-        // of votes.
-        Indices losers_indices = candidates.min_vote_indices(min_vote_count);
-        // System.out.println("Losers' indices: " + losers_indices);
-        // collect all actual candidates with the lowest number of votes.
-        CandidateList losers = candidates.losers(losers_indices);
-        // System.out.print("Losers:\n" + losers);
-        // collect all ballots belonging to these candidates
-        BallotList losers_ballots = losers.ballots();
-        // System.out.print("All losers' ballots:\n" + losers_ballots);
-        // eliminate these candidates from these ballots
-        candidates.remove_ballots(losers_indices);
-        // System.out.print("All losers' ballots, refreshed:\n" + losers_ballots);
-        // recount the ballots in favor of their highest-ranked non-eliminated
-        // candidate
-        candidates.add_ballots(losers_ballots);
+        // remove the losing candidates' votes and recount ballots
+        CandidateList losers = reshuffle(candidates, min_vote_count);
         // eliminate these candidates from the voting poll
         losers.eliminate();
         // keep looking for a winner
-        winner = candidates.find_winner(ballot_count);
+        winners = candidates.find_winners(ballot_count);
       }
-      System.out.println(winner.name);
+
+      // print the winners' name, as per problem spec
+      for (Candidate winner : winners)
+        System.out.println(winner.name);
+      // blank line to separate consecutive cases, as per problem spec
+      System.out.println();
     }
   }
 
