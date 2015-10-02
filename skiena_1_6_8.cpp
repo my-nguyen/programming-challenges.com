@@ -271,20 +271,57 @@ public:
     return builder;
   }
 
+  // this method looks in the list of remaining candidates and checks if they
+  // are all of the same size. if so they are collected into a list and returned
+  // otherwise null is returned.
+  vector<Candidate*> unisize()
+  {
+    // look for the first candidate with non-zero ballots
+    int i = 0;
+    while (i < list.size() && list[i].ballots.list.size() == 0)
+      i++;
+    vector<Candidate*> result;
+    int size = list[i].ballots.list.size();
+    result.push_back(&list[i]);
+
+    // look in the rest of list of candidates
+    for (int j = i+1; j < list.size(); j++)
+      if (list[j].ballots.list.size() != 0)
+        // if any candidate doesn't have the same size, return an empty list
+        if (list[j].ballots.list.size() != size)
+        {
+          result.clear();
+          break;
+        }
+        // if another candidate is of the same size, it is collected
+        else
+          result.push_back(&list[j]);
+
+    return result;
+  }
+
   // this method finds a candidate whose total ballot count is more than 50% of
   // the total ballot count
   // class Candidates
-  Candidate* find_winner(int ballot_count)
+  vector<Candidate*> find_winners(int ballot_count)
   {
-    for (int i = 0; i < list.size(); i++)
+    vector<Candidate*> result = unisize();
+    // not all remaining candidates have the same size
+    if (result.size() == 0)
     {
-      Candidate* candidate = &list[i];
-      // cout << "total ballots: " << ballot_count << ", candidate: " << (i+1) << ", ballot count: " << candidate->ballots.list.size() << endl;
-      // look for candidate with ballot count more than 50% of the total votes
-      if (candidate->ballots.list.size() / (float)ballot_count >= .5)
-        return candidate;
+      for (int i = 0; i < list.size(); i++)
+      {
+        Candidate* candidate = &list[i];
+        // cout << "Total ballots: " << ballot_count << ", candidate: " << (i+1) << ", ballot count: " << candidate->ballots.list.size() << endl;
+        // look for candidate with ballot count more than 50% of the total votes
+        if (candidate->ballots.list.size() / (float)ballot_count >= .5)
+        {
+          result.push_back(candidate);
+          break;
+        }
+      }
     }
-    return NULL;
+    return result;
   }
 
   // this method returns the lowest number of votes among all candidates
@@ -419,6 +456,33 @@ vector<Poll> input()
   return list;
 }
 
+// this method does the bulk of the processing as follows:
+// (1) looks for candidates with the lowest number of votes;
+// (2) collects all ballots belonging to those candidates;
+// (3) removes these candidates' votes from the master list of all ballots;
+// (4) recounts the ballots in favor of their highest-ranked non-eliminated
+//     candidate
+CandidatePointers reshuffle(Candidates& candidates, Ballots& ballots, int vote_count)
+{
+  // obtain the position (index) of the candidates with the lowest number
+  // of votes.
+  // collect all actual candidates with the lowest number of votes.
+  CandidatePointers losing_candidates = candidates.min_vote_candidates(vote_count);
+  Indices losers_indices = losing_candidates.indices();
+  // cout << "Losers' indices: " << losers_indices.operator string() << endl;
+  // cout << "Losers:" << endl << losing_candidates.operator string();
+  // collect all ballots belonging to the losing candidates
+  BallotPointers losers_ballots = losing_candidates.all_ballots();
+  // cout << "Losers' ballots, pre-removal:\n" << losers_ballots.operator string();
+  // eliminate the losing candidates from the master list of ballots
+  ballots.remove_votes(losers_indices);
+  // cout << "Losers' ballots, post-removal:\n" << losers_ballots.operator string();
+  // recount the ballots in favor of their highest-ranked non-eliminated
+  // candidate
+  candidates.recount_ballots(losers_ballots);
+  return losing_candidates;
+}
+
 void output(vector<Poll>& list)
 {
   // reminder: a Poll is a list of names and of ballots
@@ -444,35 +508,29 @@ void output(vector<Poll>& list)
       all_candidates.list.push_back(candidate);
     }
 
+    // first, eliminate those candidates who have no ballots
+    reshuffle(all_candidates, it->ballots, 0);
+
     // keep looking for a winner, one with more than 50% of the vote
-    Candidate* winner = all_candidates.find_winner(ballot_count);
-    while (winner == NULL)
+    vector<Candidate*> winners = all_candidates.find_winners(ballot_count);
+    while (winners.size() == 0)
     {
       // begin the process of elimination: start by looking for the lowest
       // number of votes received by each candidate
       int min_vote_count = all_candidates.min_vote_count();
-      // obtain the position (index) of the candidates with the lowest number
-      // of votes.
-      // collect all actual candidates with the lowest number of votes.
-      CandidatePointers losing_candidates = all_candidates.min_vote_candidates(min_vote_count);
-      Indices losers_indices = losing_candidates.indices();
-      // cout << "Losers' indices: " << losers_indices.operator string() << endl;
-      // cout << "Losers:" << endl << losing_candidates.operator string();
-      // collect all ballots belonging to the losing candidates
-      BallotPointers losers_ballots = losing_candidates.all_ballots();
-      // cout << "All losers' ballots:\n" << losers_ballots.operator string();
-      // eliminate the losing candidates from the master list of ballots
-      it->ballots.remove_votes(losers_indices);
-      // cout << "All losers' ballots, refreshed:\n" << losers_ballots.operator string();
+      // remove the losing candidates' votes and recount ballots
+      CandidatePointers losing_candidates = reshuffle(all_candidates, it->ballots, min_vote_count);
       // eliminate these candidates from the voting poll
       losing_candidates.eliminate();
-      // recount the ballots in favor of their highest-ranked non-eliminated
-      // candidate
-      all_candidates.recount_ballots(losers_ballots);
       // keep looking for a winner
-      winner = all_candidates.find_winner(ballot_count);
+      winners = all_candidates.find_winners(ballot_count);
     }
-    cout << winner->name << endl;
+
+    // print the winners' name, as per problem spec
+    for (int i = 0; i < winners.size(); i++)
+      cout << winners[i]->name << endl;
+    // blank line to separate consecutive cases, as per problem spec
+    cout << endl;
   }
 }
 
