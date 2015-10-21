@@ -39,5 +39,4 @@ def process(list)
   end
 end
 
-list = input
-process(list)
+process(input())

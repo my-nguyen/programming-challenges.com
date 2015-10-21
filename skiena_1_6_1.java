@@ -1,7 +1,7 @@
 import java.util.*;
 
 // simulate a C-like struct
-class bound_t
+class Bound
 {
   int lower;
   int upper;
@@ -28,13 +28,13 @@ class skiena_1_6_1
   }
 
   // this method reads input and returns a list of pairs of lower and upper bounds
-  static List<bound_t> input()
+  static List<Bound> input()
   {
-    List<bound_t> list = new ArrayList<>();
+    List<Bound> list = new ArrayList<>();
     Scanner scanner = new Scanner(System.in);
     while (scanner.hasNext())
     {
-      bound_t bound = new bound_t();
+      Bound bound = new Bound();
       // read the lower and upper bounds
       bound.lower = scanner.nextInt();
       bound.upper = scanner.nextInt();
@@ -47,12 +47,12 @@ class skiena_1_6_1
   }
 
   // this method returns the maximum of all cycle lengths
-  static void process(List<bound_t> list)
+  static void process(List<Bound> list)
   {
     // for each array entry of lower and upper bounds, get the cycle length for
     // each integer within those bounds, then obtain the maximum value of all
     // such cycle lengths
-    for (bound_t bound : list)
+    for (Bound bound : list)
     {
       int max = 0;
       for (int j = bound.lower; j <= bound.upper; j++)
@@ -68,7 +68,6 @@ class skiena_1_6_1
 
   public static void main(String[] args)
   {
-    List<bound_t> list = input();
-    process(list);
+    process(input());
   }
 }
