@@ -1,4 +1,6 @@
-class Base
+# this class is a base class for the 2 classes PaddedField and CalculatedField.
+# it declares a common data field, and a common toString method.
+class Field
   def to_s
     string = ""
     @data.each do |row|
@@ -8,7 +10,21 @@ class Base
   end
 end
 
-class Input < Base
+# this class contains the data field as read from input, with 2 extra lines and
+# 2 extra columns added as 4 borders around the actual data field. the borders
+# serve to facilitate calculating the number of mines in the 8 surrounding
+# cells of any cell. So, if the field from input file is:
+#		*...
+#		....
+#		.*..
+#		....
+# Then the internal data field looks like this:
+#		++++++
+#		+*...+
+#		+....+
+#		+.*..+
+#		++++++
+class PaddedField < Field
   attr_accessor :data
 
   # this constructor initializes internal data from a list of strings
@@ -31,14 +47,14 @@ class Input < Base
 
   # this method returns the total number of mines in the surrounding 8 cells
   def mine_total(i, j)
-    return mined(@data[i-1][j-1]) +
-           mined(@data[i-1][j]) +
-           mined(@data[i-1][j+1]) +
-           mined(@data[i][j-1]) +
-           mined(@data[i][j+1]) +
-           mined(@data[i+1][j-1]) +
-           mined(@data[i+1][j]) +
-           mined(@data[i+1][j+1]);
+    return is_mined(@data[i-1][j-1]) +
+           is_mined(@data[i-1][j]) +
+           is_mined(@data[i-1][j+1]) +
+           is_mined(@data[i][j-1]) +
+           is_mined(@data[i][j+1]) +
+           is_mined(@data[i+1][j-1]) +
+           is_mined(@data[i+1][j]) +
+           is_mined(@data[i+1][j+1]);
   end
 
 private
@@ -48,24 +64,28 @@ private
     "+" * size
   end
 
-  # this method prints only the input_t contained within the surrounding cells
-  # containing '+'
-  def print_original
-    1.upto(@data.length-2) do |i|
-      1.upto(@data[i].length-2) do |j|
-        print @data[i][j]
+  # this method prints the data field exactly as read from input (with the 4
+  # borders omitted)
+  def to_s2()
+    builder = ""
+    (1..(data.size-2)).each do |i|
+      (1..(data[i].size-2)).each do |j|
+        builder << data[i][j]
       end
-      puts
+      builder << '\n'
     end
+    builder
   end
 
   # this method returns whether this cell contain a mine
-  def mined(value)
+  def is_mined(value)
     (value == '*') ? 1 : 0
   end
 end
 
-class Output < Base
+# this class represents the field whose every cell contains the calculated
+# number of mines in its surrounding 8 cells.
+class CalculatedField < Field
   # this method builds the internal data input_t, by recording the mines where
   # they are present in data, and also the number of mines in the surrounding
   # 8 cells, for each cell
@@ -116,7 +136,7 @@ def input
       end
 
       # create and retain a input_t of lines
-      list << Input.new(lines)
+      list << PaddedField.new(lines)
     end
   end
 
@@ -129,10 +149,10 @@ end
 def output(list)
   # use traditional for loop instead of the advanced for loop because index
   # is needed in printing
-  0.upto(list.size-1) do |i|
+  list.size.times do |i|
     # for each cell in the input_t, sweep the surrounding cells for mines and
     # store the number of mines in the cell
-    output = Output.new(list[i])
+    output = CalculatedField.new(list[i])
 
     # print output in the format required
     puts
@@ -141,5 +161,4 @@ def output(list)
   end
 end
 
-list = input
-output(list)
+output(input())

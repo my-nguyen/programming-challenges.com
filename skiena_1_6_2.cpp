@@ -3,128 +3,136 @@
 #include <string>
 using namespace std;
 
-class base_t
+// this class is a base class for the 2 classes PaddedField and CalculatedField.
+// it declares a common data field, and a common to_string method.
+class Field
 {
 protected:
-  friend ostream& operator<<(ostream& out, base_t& base);
-
   vector<string> data;
-};
-
-ostream& operator<<(ostream& out, base_t& base)
-{
-  for (vector<string>::iterator it = base.data.begin(); it != base.data.end(); it++)
-    cout << *it << endl;
-  return out;
-}
-
-class input_t : public base_t
-{
-  friend class output_t;
 
 public:
-  input_t(const vector<string>& data);
-
-private:
-  void print_original();
-  string blanks(int size);
-  int mined(char value) const;
-  int mine_total(int i, int j) const;
-};
-
-// this method creates a new string having the desired length, and padd the
-// contents of such string with blank characters "+"
-string input_t::blanks(int size)
-{
-  return string(size, '+');
-}
-
-// this constructor initializes internal data from a list of strings
-input_t::input_t(const vector<string>& list)
-{
-  // add a blank string at the beginning
-  data.push_back(blanks(list[0].length() + 2));
-
-  // store the date while padding a blank at both the beginning and the end
-  for (vector<string>::const_iterator it = list.begin(); it != list.end(); it++)
-  {
-    data.push_back(string("+") + *it + string("+"));
-  }
-
-  // add a blank string to the end
-  data.push_back(blanks(list[0].length() + 2));
-}
-
-// this method prints only the input_t contained within the surrounding cells
-// containing '+'
-void input_t::print_original()
-{
-  for (int i = 1; i < data.size()-1; i++)
-  {
-    for (int j = 1; j < data[i].length()-1; j++)
-      cout << data[i][j];
-    cout << endl;
-  }
-}
-
-// this method returns whether this cell contain a mine
-int input_t::mined(char value) const
-{
-  return (value == '*') ? 1 : 0;
-}
-
-// this method returns the total number of mines in the surrounding 8 cells
-int input_t::mine_total(int i, int j) const
-{
-  return mined(data[i-1][j-1]) +
-         mined(data[i-1][j]) +
-         mined(data[i-1][j+1]) +
-         mined(data[i][j-1]) +
-         mined(data[i][j+1]) +
-         mined(data[i+1][j-1]) +
-         mined(data[i+1][j]) +
-         mined(data[i+1][j+1]);
-}
-
-class output_t : public base_t
-{
-public:
-  output_t(const input_t& input);
-};
-
-// this method builds the internal data input_t, by recording the mines where
-// they are present in data, and also the number of mines in the surrounding
-// 8 cells, for each cell
-output_t::output_t(const input_t& input)
-{
-  // remember: data has 2 extra lines
-  for (int i = 1; i < input.data.size()-1; i++)
+  string to_string()
   {
     string builder;
-    // each line in data has 2 extra columns (at beginning and at end)
-    for (int j = 1; j < input.data[i].length()-1; j++)
-    {
-      // if this input cell contains a mine, record the mine in the output cell
-      if (input.data[i][j] == '*')
-        builder.append("*");
-      // otherwise, calculate the number of mines in the surrounding 8 cells
-      // and record that number in the output cell
-      else
-        builder += '0' + input.mine_total(i, j);
-    }
-    // retain the string
-    data.push_back(builder);
+    for (int i = 0; i < data.size(); i++)
+      builder.append(data[i]).append("\n");
+    return builder;
   }
-}
+};
 
-// this method reads data from STDIN. The first line of each input_t contains 2
-// integers which stand for the number of lines and columns of the input_t. Each
-// of the next n lines contains exactly m characters, representing the input_t.
-// Safe squares are denoted by "." and mine squares by "*". The first input_t
-// line where n = m = 0 represents the end of input and should not be processed.
-vector<input_t> input()
+// this class contains the data field as read from input, with 2 extra lines and
+// 2 extra columns added as 4 borders around the actual data field. the borders
+// serve to facilitate calculating the number of mines in the 8 surrounding
+// cells of any cell. So, if the field from input file is:
+//		*...
+//		....
+//		.*..
+//		....
+// Then the internal data field looks like this:
+//		++++++
+//		+*...+
+//		+....+
+//		+.*..+
+//		++++++
+class PaddedField: public Field
 {
-  vector<input_t> list;
+friend class CalculatedField;
+public:
+  // this constructor retains input data from a list of String's by padding the
+  // 4 borders as described above.
+  PaddedField(vector<string>& list)
+  {
+    // add a blank string at the beginning
+    data.push_back(blanks(list[0].length() + 2));
+    // store all input strings while padding a blank at both the beginning and
+    // the end of each string
+    for (int i = 0; i < list.size(); i++)
+      data.push_back("+" + list[i] + "+");
+    // add a blank string to the end
+    data.push_back(blanks(list[0].length() + 2));
+  }
+
+  // this method prints the data field exactly as read from input (with the 4
+  // borders omitted)
+  string to_string()
+  {
+    string builder;
+    for (int i = 1; i < data.size()-1; i++)
+    {
+      for (int j = 1; j < data[i].length()-1; j++)
+        builder += data[i][j];
+      builder += '\n';
+    }
+    return builder;
+  }
+
+private:
+  // this method returns whether this cell contain a mine
+  int is_mined(char value)
+  {
+    return (value == '*') ? 1 : 0;
+  }
+
+  // this method returns the total number of mines in the surrounding 8 cells
+  int mine_total(int i, int j)
+  {
+    return is_mined(data[i-1][j-1]) +
+           is_mined(data[i-1][j]) +
+           is_mined(data[i-1][j+1]) +
+           is_mined(data[i][j-1]) +
+           is_mined(data[i][j+1]) +
+           is_mined(data[i+1][j-1]) +
+           is_mined(data[i+1][j]) +
+           is_mined(data[i+1][j+1]);
+  }
+
+  // this utility method returns a string whose content is filled with blank
+  // characters "+"
+  string blanks(int size)
+  {
+    return string(size, '+');
+  }
+};
+
+// this class represents the field whose every cell contains the calculated
+// number of mines in its surrounding 8 cells.
+class CalculatedField: public Field
+{
+public:
+  // this method builds the internal data field, by recording the mines where
+  // they are present in data, and also the number of mines in the surrounding
+  // 8 cells, for each cell
+  CalculatedField(PaddedField& field)
+  {
+    // remember: data has 2 extra lines
+    for (int i = 1; i < field.data.size()-1; i++)
+    {
+      string builder;
+      // each line in data has 2 extra columns (at beginning and at end)
+      for (int j = 1; j < field.data[i].length()-1; j++)
+      {
+        // if this input cell contains a mine, record the mine in the output cell
+        if (field.data[i][j] == '*')
+          builder += '*';
+        // otherwise, calculate the number of mines in the surrounding 8 cells
+        // and record that number in the output cell
+        else
+          builder += '0' + field.mine_total(i, j);
+      }
+      // retain the string
+      data.push_back(builder);
+    }
+  }
+};
+
+// this method reads data from STDIN. The first line of each field contains 2
+// integers which stand for the number of lines and columns of the field. Each
+// of the next n lines contains exactly m characters, representing the field.
+// Safe squares are denoted by "." and mine squares by "*". The first field
+// line where n = m = 0 represents the end of input and should not be processed.
+vector<PaddedField> input()
+{
+  vector<PaddedField> list;
   while (true)
   {
     // read 2 integers
@@ -148,19 +156,18 @@ vector<input_t> input()
         getline(cin, line);
         lines.push_back(line);
       }
-
       // create and retain a input_t of lines
-      list.push_back(input_t(lines));
+      list.push_back(PaddedField(lines));
     }
   }
 
   return list;
-}
+};
 
-// this method sweeps thru a list of input_ts; for each input_t it prints out the
-// mine input_ts as well as input_ts which contain the total number of mines in
+// this method sweeps thru a list of Fields; for each Field it prints out the
+// mine fields as well as fields which contain the total number of mines in
 // the surrounding 8 cells
-void output(vector<input_t>& list)
+void output(vector<PaddedField> list)
 {
   // use traditional for loop instead of the advanced for loop because index
   // is needed in printing
@@ -168,17 +175,16 @@ void output(vector<input_t>& list)
   {
     // for each cell in the input_t, sweep the surrounding cells for mines and
     // store the number of mines in the cell
-    output_t output(list[i]);
+    CalculatedField output(list[i]);
 
     // print output in the format required
     cout << endl;
     cout << "Field #" << (i+1) << ":" << endl;
-    cout << output;
+    cout << output.to_string();
   }
 }
 
 int main()
 {
-  vector<input_t> list = input();
-  output(list);
+  output(input());
 }
