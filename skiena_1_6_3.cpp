@@ -6,7 +6,15 @@ using namespace std;
 class Expenses
 {
 private:
-  float average();
+  float average()
+  {
+    float total = 0.0f;
+    for (vector<float>::iterator it = data.begin(); it != data.end(); it++)
+      total += *it;
+
+    return total / data.size();
+  }
+
   vector<float> data;
 
 public:
@@ -26,38 +34,26 @@ public:
     std::sort(data.begin(), data.end());
   }
 
-  float exchange();
-  friend ostream& operator<<(ostream& out, Expenses& expenses);
+  float exchange()
+  {
+    float total = 0.0f;
+    float avg = average();
+    for (vector<float>::iterator it = data.begin(); it != data.end(); it++)
+      if (*it >= avg)
+        break;
+      else
+        total += avg - *it;
+    return total;
+  }
+
+  friend ostream& operator<<(ostream& out, Expenses& expenses)
+  {
+    for (vector<float>::iterator it = expenses.data.begin(); it != expenses.data.end(); it++)
+      out << *it << " ";
+    out << endl;
+    return out;
+  }
 };
-
-float Expenses::exchange()
-{
-  float total = 0.0f;
-  float avg = average();
-  for (vector<float>::iterator it = data.begin(); it != data.end(); it++)
-    if (*it >= avg)
-      break;
-    else
-      total += avg - *it;
-  return total;
-}
-
-float Expenses::average()
-{
-  float total = 0.0f;
-  for (vector<float>::iterator it = data.begin(); it != data.end(); it++)
-    total += *it;
-
-  return total / data.size();
-}
-
-ostream& operator<<(ostream& out, Expenses& expenses)
-{
-  for (vector<float>::iterator it = expenses.data.begin(); it != expenses.data.end(); it++)
-    out << *it << " ";
-  out << endl;
-  return out;
-}
 
 vector<Expenses> input()
 {
@@ -102,6 +98,5 @@ void output(vector<Expenses> list)
 
 int main()
 {
-  vector<Expenses> list = input();
-  output(list);
+  output(input());
 }

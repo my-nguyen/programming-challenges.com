@@ -1,5 +1,51 @@
 import java.util.*;
 
+class Expenses
+{
+  public List<Float> data = new ArrayList<>();
+
+  public void add(float expense)
+  {
+    data.add(expense);
+  }
+
+  public void sort()
+  {
+    Collections.sort(data);
+  }
+
+  public String toString()
+  {
+    StringBuilder builder = new StringBuilder();
+    for (float expense : data)
+      builder.append(expense).append(" ");
+    builder.append("\n");
+
+    return builder.toString();
+  }
+
+  float average()
+  {
+    float total = 0.0f;
+    for (float expense : data)
+      total += expense;
+
+    return total / data.size();
+  }
+
+  public float exchange()
+  {
+    float total = 0.0f;
+    float avg = average();
+    for (float expense : data)
+      if (expense >= avg)
+        break;
+      else
+        total += avg - expense;
+    return total;
+  }
+}
+
 class skiena_1_6_3
 {
   static List<Expenses> input()
@@ -45,53 +91,6 @@ class skiena_1_6_3
 
   public static void main(String[] args)
   {
-    List<Expenses> list = input();
-    output(list);
-  }
-}
-
-class Expenses
-{
-  public List<Float> data = new ArrayList<>();
-
-  public void add(float expense)
-  {
-    data.add(expense);
-  }
-
-  public void sort()
-  {
-    Collections.sort(data);
-  }
-
-  public String toString()
-  {
-    StringBuilder builder = new StringBuilder();
-    for (float expense : data)
-      builder.append(expense).append(" ");
-    builder.append("\n");
-
-    return builder.toString();
-  }
-
-  float average()
-  {
-    float total = 0.0f;
-    for (float expense : data)
-      total += expense;
-
-    return total / data.size();
-  }
-
-  public float exchange()
-  {
-    float total = 0.0f;
-    float avg = average();
-    for (float expense : data)
-      if (expense >= avg)
-        break;
-      else
-        total += avg - expense;
-    return total;
+    output(input());
   }
 }
