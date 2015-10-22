@@ -308,7 +308,6 @@ class skiena_1_6_7
 
   public static void main(String[] args)
   {
-    List<Board> list = input();
-    output(list);
+    output(input());
   }
 }

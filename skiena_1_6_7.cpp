@@ -230,7 +230,7 @@ vector<Board> input()
   return list;
 }
 
-void output(vector<Board>& list)
+void output(vector<Board> list)
 {
   // go thru each board
   for (int l = 0; l < list.size(); l++)
@@ -334,6 +334,5 @@ void output(vector<Board>& list)
 
 int main()
 {
-  vector<Board> list = input();
-  output(list);
+  output(input());
 }

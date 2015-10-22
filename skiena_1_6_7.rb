@@ -19,7 +19,7 @@ class Board
   attr_accessor :data
 
   def initialize
-    @data = []
+    @data = Array.new(MAX_SIDE)
   end
 
   # this method checks to see if the current board contains 8 rows of "........"
@@ -278,5 +278,4 @@ def output(list)
   end # for loop(List<Board> list)
 end # output() method
 
-list = input()
-output(list)
+output(input())
