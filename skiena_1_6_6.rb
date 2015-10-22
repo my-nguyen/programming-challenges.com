@@ -188,5 +188,4 @@ def output(list)
   end
 end
 
-list = input
-output(list)
+output(input())

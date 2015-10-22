@@ -275,10 +275,10 @@ def input
   list
 end
 
-def outputs(list)
+def output(list)
   list.each do |command|
     command.execute
   end
 end
 
-outputs(input())
+output(input())

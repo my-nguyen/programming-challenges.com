@@ -18,7 +18,9 @@ class Instructions
   //   instructions actually created
   Map<Integer, String> data = new HashMap<Integer, String>();
 
-  public Instructions() {}
+  public Instructions()
+  {
+  }
 
   public String toString()
   {
@@ -241,7 +243,6 @@ class skiena_1_6_6
 
   public static void main(String[] args)
   {
-    List<Instructions> list = input();
-    output(list);
+    output(input());
   }
 }

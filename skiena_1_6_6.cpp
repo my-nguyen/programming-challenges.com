@@ -29,7 +29,9 @@ public:
   map<int, string> data;
 
 public:
-  Instructions() {}
+  Instructions()
+  {
+  }
 
   operator string()
   {
@@ -108,7 +110,7 @@ vector<Instructions> input()
 }
 
 #define MAX_LOOPS 10
-void output(vector<Instructions>& list)
+void output(vector<Instructions> list)
 {
   for (vector<Instructions>::iterator it = list.begin(); it != list.end(); it++)
   {
@@ -261,6 +263,5 @@ void output(vector<Instructions>& list)
 
 int main()
 {
-  vector<Instructions> list = input();
-  output(list);
+  output(input());
 }
