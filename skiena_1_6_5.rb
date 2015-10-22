@@ -28,9 +28,9 @@ class Image
     end
   end
 
-  def sort(one, two)
-    if (one > two)
-      one, two = two, one
+  def sort(left, right)
+    if (left > right)
+      left, right = right, left
     end
   end
 
@@ -275,5 +275,4 @@ def outputs(list)
   end
 end
 
-list = input
-outputs(list)
+outputs(input())
