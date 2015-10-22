@@ -204,6 +204,7 @@ class LCD
   @@prints = []
   def self.static_init()
     if (@@prints.empty?)
+      # Ruby function object: invoke it by calling Ruby #method(:func_obj_name)
       @@prints << method(:print0)
       @@prints << method(:print1)
       @@prints << method(:print2)
@@ -293,5 +294,4 @@ def output(list)
   end
 end
 
-list = input
-output(list)
+output(input())

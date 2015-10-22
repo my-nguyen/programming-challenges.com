@@ -365,7 +365,7 @@ vector<LCD> input()
   return list;
 }
 
-void output(vector<LCD>& list)
+void output(vector<LCD> list)
 {
   for (vector<LCD>::iterator it = list.begin(); it != list.end(); it++)
     cout << it->operator string();
@@ -373,6 +373,5 @@ void output(vector<LCD>& list)
 
 int main()
 {
-  vector<LCD> list = input();
-  output(list);
+  output(input());
 }

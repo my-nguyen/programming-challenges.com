@@ -20,7 +20,9 @@ class LCD
   static Print[] prints = new Print[10];
   static
   {
-    // prints[0], which is Print0 is in charge of printing letter '0', etc
+    // prints[0], which is assigned to Print0, is in charge of printing letter '0'
+    // prints[1], which is assigned to Print0, is in charge of printing letter '1'
+    // etc
     prints[0] = new Print0();
     prints[1] = new Print1();
     prints[2] = new Print2();
@@ -79,7 +81,7 @@ class LCD
     return builder.toString();
   }
 
-  // practice Java functor
+  // Java function object: first, define an interface with a single method in it
   public interface Print
   {
     public char toChar(int size, int row, int column);
@@ -382,7 +384,6 @@ class skiena_1_6_4
 
   public static void main(String[] args)
   {
-    List<LCD> list = input();
-    output(list);
+    output(input());
   }
 }
