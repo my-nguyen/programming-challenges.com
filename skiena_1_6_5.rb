@@ -42,6 +42,8 @@ class Image
     ((row1-1)..(row2-1)).each do |i|
       @data[i][column-1] = color
     end
+    # puts("vertical, col:#{column}, row1:#{row1}, row2:#{row2}, col:#{color}")
+    # puts self
   end
 
   # this method draws a horizontal segment of color in row , between column1
@@ -52,6 +54,8 @@ class Image
     ((column1-1)..(column2-1)).each do |i|
       @data[row-1][i] = color
     end
+    # puts("horizontal, col1:#{column1}, col2:#{column2}, row:#{row}, col:#{color}")
+    # puts self
   end
 
   # this method draws a filled rectangle with color, where (column1, row1) is
@@ -74,14 +78,16 @@ class Image
   def fill(column, row, color)
     old_color = get(column, row)
     fill_internal(column, row, old_color, color)
+    # puts("fill, col:#{column}, row:#{row}, col:#{color}")
+    # puts self
   end
 
   # internal recursive method, used by the other fill()
   # since Ruby doesn't allow method overloading
   def fill_internal(column, row, old_color, new_color)
-    if (row >= 1 && row <= @data.size &&
-      column >= 1 && column <= @data[0].length &&
-      @data[row-1][column-1] == old_color)
+    if (row >= 1 && row <= @data.size) &&
+       (column >= 1 && column <= @data[0].length) &&
+       (@data[row-1][column-1] == old_color)
       @data[row-1][column-1] = new_color
       fill_internal(column-1, row, old_color, new_color)
       fill_internal(column+1, row, old_color, new_color)
