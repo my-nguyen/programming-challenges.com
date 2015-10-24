@@ -28,7 +28,7 @@ class Flags
   end
 
   def to_s
-    string buider = ""
+    buider = ""
     builder << "Flags entries:\n"
     @list.each do |bool|
       builder << bool.to_s << " "
@@ -104,5 +104,4 @@ def output(list)
   end
 end
 
-list = input()
-output(list)
+output(input())

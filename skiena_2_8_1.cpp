@@ -128,7 +128,7 @@ vector<Numbers> input()
   return list;
 }
 
-void output(vector<Numbers>& list)
+void output(vector<Numbers> list)
 {
   for (int i = 0; i < list.size(); i++)
     cout << (is_jolly(list[i]) ? "Jolly" : "Not jolly") << endl;
@@ -136,6 +136,5 @@ void output(vector<Numbers>& list)
 
 int main()
 {
-  vector<Numbers> list = input();
-  output(list);
+  output(input());
 }

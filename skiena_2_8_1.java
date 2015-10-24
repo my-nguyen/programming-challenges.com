@@ -118,7 +118,6 @@ class skiena_2_8_1
 
   public static void main(String[] args)
   {
-    List<Numbers> list = input();
-    output(list);
+    output(input());
   }
 }
