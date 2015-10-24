@@ -112,7 +112,7 @@ vector<Instructions> input()
 #define MAX_LOOPS 10
 void output(vector<Instructions> list)
 {
-  for (vector<Instructions>::iterator it = list.begin(); it != list.end(); it++)
+  for (int i = 0; i < list.size(); i++)
   {
     // cout << "Instructions:\n" << it->operator string() << endl;
     // snapshot of instructions
@@ -130,7 +130,7 @@ void output(vector<Instructions> list)
     while (halt == false)
     {
       // current instruction word based on location
-      string instruction = it->get(location);
+      string instruction = list[i].get(location);
       // cout << "location: " << location << ", instruction: " << instruction.c_str() << ", registers: " << registers.operator string() << endl;
       // the digits at location 0, 1, and 2 inside the current instruction instruction
       int zero = instruction[0] - '0';
@@ -178,7 +178,7 @@ void output(vector<Instructions> list)
         }
         // if the next location is beyond the current set of instructions,
         // halt the program
-        else if (it->data.find(location+1) == it->data.end())
+        else if (list[i].data.find(location+1) == list[i].data.end())
         {
           // cout << "\thalt::next location (" << (location+1) << ") not in RAM" << endl;
           halt = true;
@@ -234,7 +234,7 @@ void output(vector<Instructions> list)
         // at 2. So: first, fetch the content of register at 2, which is an
         // address. then, go to the address location in RAM and fetch the
         // instruction there and store it in register at 1.
-        registers.data[one] = stoi(it->get(registers.data[two]));
+        registers.data[one] = stoi(list[i].get(registers.data[two]));
         location++;
         break;
       case 9:
@@ -246,7 +246,7 @@ void output(vector<Instructions> list)
           // pure C++: use of stringstream, setfill() and setw() to replace sprintf()
           stringstream stream;
           stream << setfill('0') << setw(3) << registers.data[one];
-          it->data[registers.data[two]] = stream.str();
+          list[i].data[registers.data[two]] = stream.str();
           // cout << "\tRAM-write::instruction: " << instruction << ", register[" << two << "](address): " << registers.data[two] << ", register[" << one << "](value): " << registers.data[one] << endl;
           // sprintf(it->instructions[registers.data[two]], "%03d", registers.data[one]);
           location++;

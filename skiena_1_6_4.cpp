@@ -367,8 +367,8 @@ vector<LCD> input()
 
 void output(vector<LCD> list)
 {
-  for (vector<LCD>::iterator it = list.begin(); it != list.end(); it++)
-    cout << it->operator string();
+  for (int i = 0; i < list.size(); i++)
+    cout << list[i].operator string();
 }
 
 int main()

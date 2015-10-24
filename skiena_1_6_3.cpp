@@ -9,8 +9,8 @@ private:
   float average()
   {
     float total = 0.0f;
-    for (vector<float>::iterator it = data.begin(); it != data.end(); it++)
-      total += *it;
+    for (int i = 0; i < data.size(); i++)
+      total += data[i];
 
     return total / data.size();
   }
@@ -38,18 +38,18 @@ public:
   {
     float total = 0.0f;
     float avg = average();
-    for (vector<float>::iterator it = data.begin(); it != data.end(); it++)
-      if (*it >= avg)
+    for (int i = 0; i < data.size(); i++)
+      if (data[i] >= avg)
         break;
       else
-        total += avg - *it;
+        total += avg - data[i];
     return total;
   }
 
   friend ostream& operator<<(ostream& out, Expenses& expenses)
   {
-    for (vector<float>::iterator it = expenses.data.begin(); it != expenses.data.end(); it++)
-      out << *it << " ";
+    for (int i = 0; i < expenses.data.size(); i++)
+      out << expenses.data[i] << " ";
     out << endl;
     return out;
   }
@@ -86,13 +86,13 @@ vector<Expenses> input()
 
 void output(vector<Expenses> list)
 {
-  for (vector<Expenses>::iterator it = list.begin(); it != list.end(); it++)
+  for (int i = 0; i < list.size(); i++)
   {
     // sort all the expenses, to facilitate calculating the average and the
     // exchange amount per student
-    it->sort();
+    list[i].sort();
     // print output in the format required
-    cout << "$" << it->exchange() << endl;
+    cout << "$" << list[i].exchange() << endl;
   }
 }
 

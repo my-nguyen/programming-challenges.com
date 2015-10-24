@@ -289,14 +289,14 @@ vector<Command*> input()
 
 void output(vector<Command*>& list)
 {
-  for (vector<Command*>::iterator it = list.begin(); it != list.end(); it++)
-    (*it)->execute();
+  for (int i = 0; i < list.size(); i++)
+    list[i]->execute();
 }
 
 void cleanup(vector<Command*>& list)
 {
-  for (vector<Command*>::iterator it = list.begin(); it != list.end(); it++)
-    delete (*it);
+  for (int i = 0; i < list.size(); i++)
+    delete list[i];
 }
 
 int main()

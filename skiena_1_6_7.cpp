@@ -313,9 +313,9 @@ void output(vector<Board> list)
     cout << "Game #" << (l+1) << ": ";
     for (int i = 0; i < 2; i++)
     {
-      for (vector<Blocker*>::iterator jt = obstructors[i].begin(); jt != obstructors[i].end(); jt++)
+      for (int j = 0; j < obstructors[i].size(); j++)
       {
-        if (*jt != NULL && (*jt)->is_enemy)
+        if (obstructors[i][j] != NULL && obstructors[i][j]->is_enemy)
         {
           cout << names[i] << " king is in check." << endl;
           checked = true;

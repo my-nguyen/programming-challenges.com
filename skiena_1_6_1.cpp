@@ -46,17 +46,17 @@ void process(vector<Bound> list)
   // for each array entry of lower and upper bounds, get the cycle length for
   // each integer within those bounds, then obtain the maximum value of all
   // such cycle lengths
-  for (vector<Bound>::iterator it = list.begin(); it != list.end(); it++)
+  for (int i = 0; i < list.size(); i++)
   {
     int max = 0;
-    for (int j = it->lower; j <= it->upper; j++)
+    for (int j = list[i].lower; j <= list[i].upper; j++)
     {
       int tmp = cycle_length(j);
       if (tmp > max)
         max = tmp;
     }
 
-    cout << it->lower << " " << it->upper << " " << max << endl;
+    cout << list[i].lower << " " << list[i].upper << " " << max << endl;
   }
 }
 
