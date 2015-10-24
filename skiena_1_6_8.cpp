@@ -6,24 +6,16 @@
 using namespace std;
 using namespace boost;
 
-// this class represents a list of integer indices. its main purpose is for the
-// convenience of printing via operator string()
-class Indices
+string to_string(vector<int>& list)
 {
-public:
-  vector<int> list;
-
-  operator string()
-  {
-    string builder;
-    builder.append("[");
-    for (vector<int>::iterator it = list.begin(); it != list.end(); it++)
-      builder.append(to_string(*it+1)).append(" ");
-    builder.pop_back();
-    builder.append("]");
-    return builder;
-  }
-};
+  string builder;
+  builder.append("[");
+  for (int i = 0; i < list.size(); i++)
+    builder.append(to_string(list[i]+1)).append(" ");
+  builder.pop_back();
+  builder.append("]");
+  return builder;
+}
 
 // this class represents a ballot, which is a vector of int votes
 class Ballot
@@ -48,15 +40,15 @@ public:
   {
     string builder;
     builder.append("[");
-    for (vector<int>::iterator it = votes.begin(); it != votes.end(); it++)
-      builder.append(to_string(*it)).append(" ");
+    for (int i = 0; i < votes.size(); i++)
+      builder.append(to_string(votes[i])).append(" ");
     builder.pop_back();
     builder.append("]");
     builder.append("\n");
     return builder;
   }
 
-  static Indices indices;
+  static vector<int> indices;
   // unary function (that accepts an element of vector<int> as argument and
   // returns bool) as required by std::remove_if(). this function must be static
   // so std::remove_if() can call it. this function returns whether an int item
@@ -64,13 +56,13 @@ public:
   // class Ballot
   static bool find_loser(int item)
   {
-    bool found = (find(indices.list.begin(), indices.list.end(), item-1) != indices.list.end());
+    bool found = (find(indices.begin(), indices.end(), item-1) != indices.end());
     return found;
   }
 
   // this method removes all votes that match the list of eliminated candidates
   // class Ballot
-  void remove_votes(Indices& losers_indices)
+  void remove_votes(vector<int>& losers_indices)
   {
     // hack: save a reference to losers_indices so it can be used/referenced
     // inside the predicate find_loser(), which is static, so this reference
@@ -81,7 +73,7 @@ public:
     votes.erase(remove_if(votes.begin(), votes.end(), find_loser), votes.end());
   }
 };
-Indices Ballot::indices;
+vector<int> Ballot::indices;
 
 // this class is comprised of vector<Ballots*> and not vector<Ballot>. this
 // class serves as a collection of pointers to a subset of ballots within the
@@ -98,8 +90,8 @@ public:
   operator string()
   {
     string builder;
-    for (vector<Ballot*>::iterator it = list.begin(); it != list.end(); it++)
-      builder.append(" ").append(**it);
+    for (int i = 0; i < list.size(); i++)
+      builder.append(" ").append(*list[i]);
     return builder;
   }
 
@@ -108,11 +100,11 @@ public:
   BallotPointers match(int vote)
   {
     BallotPointers result;
-    for (vector<Ballot*>::iterator it = list.begin(); it != list.end(); it++)
+    for (int i = 0; i < list.size(); i++)
     {
-      if ((*it)->votes[0] == vote)
+      if (list[i]->votes[0] == vote)
         // retain the address (within vector<Ballot>) of the matching ballot
-        result.list.push_back(*it);
+        result.list.push_back(list[i]);
     }
     return result;
   }
@@ -129,16 +121,16 @@ public:
   operator string()
   {
     string builder;
-    for (vector<Ballot>::iterator it = list.begin(); it != list.end(); it++)
-      builder.append(" ").append(*it);
+    for (int i = 0; i < list.size(); i++)
+      builder.append(" ").append(list[i]);
     return builder;
   }
 
   // class Ballots
-  void remove_votes(Indices& losers_indices)
+  void remove_votes(vector<int>& losers_indices)
   {
-    for (vector<Ballot>::iterator it = list.begin(); it != list.end(); it++)
-      it->remove_votes(losers_indices);
+    for (int i = 0; i < list.size(); i++)
+      list[i].remove_votes(losers_indices);
   }
 
   // this method searches through a master list of ballots for those whose first
@@ -148,11 +140,11 @@ public:
   BallotPointers match(int candidate)
   {
     BallotPointers result;
-    for (vector<Ballot>::iterator it = list.begin(); it != list.end(); it++)
+    for (int i = 0; i < list.size(); i++)
     {
-      if (it->votes[0] == candidate)
+      if (list[i].votes[0] == candidate)
         // retain the address (within vector<Ballot>) of the matching ballot
-        result.list.push_back(&*it);
+        result.list.push_back(&list[i]);
     }
     return result;
   }
@@ -184,8 +176,8 @@ public:
   {
     if (ballots.list.size() != 0 && new_ballots.list.size() != 0)
     {
-      for (vector<Ballot*>::iterator it = new_ballots.list.begin(); it != new_ballots.list.end(); it++)
-        ballots.list.push_back(*it);
+      for (int i = 0; i < new_ballots.list.size(); i++)
+        ballots.list.push_back(new_ballots.list[i]);
     }
   }
 
@@ -219,11 +211,11 @@ public:
   // this method returns a list of indices associated with these candidates. the
   // indices are also the candidates' voting numbers/rankings.
   // class CandidatePointers
-  Indices indices()
+  vector<int> indices()
   {
-    Indices result;
-    for (vector<Candidate*>::iterator it = list.begin(); it != list.end(); it++)
-      result.list.push_back(*it - base);
+    vector<int> result;
+    for (int i = 0; i < list.size(); i++)
+      result.push_back(list[i] - base);
     return result;
   }
 
@@ -231,8 +223,8 @@ public:
   operator string()
   {
     string builder;
-    for (vector<Candidate*>::iterator it = list.begin(); it != list.end(); it++)
-      builder.append(**it);
+    for (int i = 0; i < list.size(); i++)
+      builder.append(*list[i]);
     return builder;
   }
 
@@ -241,9 +233,9 @@ public:
   BallotPointers all_ballots()
   {
     BallotPointers result;
-    for (vector<Candidate*>::iterator it = list.begin(); it != list.end(); it++)
-      for (vector<Ballot*>::iterator jt = (*it)->ballots.list.begin(); jt != (*it)->ballots.list.end(); jt++)
-        result.list.push_back(*jt);
+    for (int i = 0; i < list.size(); i++)
+      for (int j = 0; j < list[i]->ballots.list.size(); j++)
+        result.list.push_back(list[i]->ballots.list[j]);
 
     return result;
   }
@@ -252,8 +244,8 @@ public:
   // class CandidatePointers
   void eliminate()
   {
-    for (vector<Candidate*>::iterator it = list.begin(); it != list.end(); it++)
-      (*it)->ballots.list.clear();
+    for (int i = 0; i < list.size(); i++)
+      list[i]->ballots.list.clear();
   }
 };
 
@@ -266,8 +258,8 @@ public:
   operator string()
   {
     string builder;
-    for (vector<Candidate>::iterator it = list.begin(); it != list.end(); it++)
-      builder.append(*it);
+    for (int i = 0; i < list.size(); i++)
+      builder.append(list[i]);
     return builder;
   }
 
@@ -329,9 +321,9 @@ public:
   int min_vote_count()
   {
     int min_vote_count = numeric_limits<int>::max();
-    for (vector<Candidate>::iterator it = list.begin(); it != list.end(); it++)
+    for (int i = 0; i < list.size(); i++)
     {
-      int vote_count = it->ballots.list.size();
+      int vote_count = list[i].ballots.list.size();
       if (vote_count != 0)
         if (vote_count < min_vote_count)
           min_vote_count = vote_count;
@@ -350,11 +342,11 @@ public:
   CandidatePointers min_vote_candidates(int min_vote_count)
   {
     CandidatePointers candidates(&list[0]);
-    for (vector<Candidate>::iterator it = list.begin(); it != list.end(); it++)
+    for (int i = 0; i < list.size(); i++)
     {
       // a candidate whose total vote count equals the minimum vote count
-      if (it->ballots.list.size() == min_vote_count)
-        candidates.list.push_back(&*it);
+      if (list[i].ballots.list.size() == min_vote_count)
+        candidates.list.push_back(&list[i]);
     }
     return candidates;
   }
@@ -385,14 +377,12 @@ public:
   // ranking (position/index) matches the indices, collects and returns those
   // candidates
   // class Candidates
-  Candidates losers(Indices& losers_indices)
+  Candidates losers(vector<int>& losers_indices)
   {
     Candidates losers;
     for (int i = 0; i < list.size(); i++)
-      for (vector<int>::iterator it = losers_indices.list.begin();
-           it != losers_indices.list.end();
-           it++)
-        if (i+1 == *it)
+      for (int i = 0; i < losers_indices.size(); i++)
+        if (i+1 == losers_indices[i])
           losers.list.push_back(list[i]);
     return losers;
   }
@@ -408,8 +398,8 @@ public:
   {
     string builder;
     builder.append(to_string(names.size())).append(" candidates:\n");
-    for (vector<string>::iterator it = names.begin(); it != names.end(); it++)
-      builder.append(" <").append(*it).append(">\n");
+    for (int i = 0; i < names.size(); i++)
+      builder.append(" <").append(names[i]).append(">\n");
 
     builder.append(to_string(ballots.list.size())).append(" ballots:\n");
     builder.append(ballots);
@@ -468,7 +458,7 @@ CandidatePointers reshuffle(Candidates& candidates, Ballots& ballots, int vote_c
   // of votes.
   // collect all actual candidates with the lowest number of votes.
   CandidatePointers losing_candidates = candidates.min_vote_candidates(vote_count);
-  Indices losers_indices = losing_candidates.indices();
+  vector<int> losers_indices = losing_candidates.indices();
   // cout << "Losers' indices: " << losers_indices.operator string() << endl;
   // cout << "Losers:" << endl << losing_candidates.operator string();
   // collect all ballots belonging to the losing candidates
@@ -483,25 +473,26 @@ CandidatePointers reshuffle(Candidates& candidates, Ballots& ballots, int vote_c
   return losing_candidates;
 }
 
-void output(vector<Poll>& list)
+void output(vector<Poll> list)
 {
   // reminder: a Poll is a list of names and of ballots
-  for (vector<Poll>::iterator it = list.begin(); it != list.end(); it++)
+  for (int i = 0; i < list.size(); i++)
   {
+    Poll& poll = list[i];
     // cout << "POLL\n" + it->operator string();
     Candidates all_candidates;
-    int ballot_count = it->ballots.list.size();
+    int ballot_count = poll.ballots.list.size();
 
     // for each name in the current poll
-    for (int j = 0; j < it->names.size(); j++)
+    for (int j = 0; j < poll.names.size(); j++)
     {
-      string name = it->names[j];
+      string name = poll.names[j];
       // create a candidate with such a name
       Candidate candidate(name);
       // collect those ballots whose first vote match the current candidate,
       // based on the candidate's current position (index). the master list of
       // ballots remains unchanged.
-      candidate.ballots = it->ballots.match(j + 1);
+      candidate.ballots = poll.ballots.match(j + 1);
 
       // cout << "Candidate " << (j+1) << ": " + candidate.operator string();
       // save the candidate
@@ -509,7 +500,7 @@ void output(vector<Poll>& list)
     }
 
     // first, eliminate those candidates who have no ballots
-    reshuffle(all_candidates, it->ballots, 0);
+    reshuffle(all_candidates, poll.ballots, 0);
 
     // keep looking for a winner, one with more than 50% of the vote
     vector<Candidate*> winners = all_candidates.find_winners(ballot_count);
@@ -519,7 +510,7 @@ void output(vector<Poll>& list)
       // number of votes received by each candidate
       int min_vote_count = all_candidates.min_vote_count();
       // remove the losing candidates' votes and recount ballots
-      CandidatePointers losing_candidates = reshuffle(all_candidates, it->ballots, min_vote_count);
+      CandidatePointers losing_candidates = reshuffle(all_candidates, poll.ballots, min_vote_count);
       // eliminate these candidates from the voting poll
       losing_candidates.eliminate();
       // keep looking for a winner
@@ -536,6 +527,5 @@ void output(vector<Poll>& list)
 
 int main()
 {
-  vector<Poll> list = input();
-  output(list);
+  output(input());
 }

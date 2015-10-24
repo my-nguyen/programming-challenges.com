@@ -25,7 +25,7 @@ class Ballot
   }
 
   // this method removes all votes that match the list of eliminated candidates
-  void remove_votes(Indices losers_indices)
+  void remove_votes(List<Integer> losers_indices)
   {
     // must use the following block construct to remove an element from List
     // while iterating over it.
@@ -33,7 +33,7 @@ class Ballot
     while (it.hasNext())
     {
       int choice = it.next();
-      for (int index : losers_indices.list)
+      for (int index : losers_indices)
         if (choice == index)
           it.remove();
     }
@@ -52,7 +52,7 @@ class BallotList
     return builder.toString();
   }
 
-  void remove_ballots(Indices losers_indices)
+  void remove_ballots(List<Integer> losers_indices)
   {
     for (Ballot ballot : list)
       ballot.remove_votes(losers_indices);
@@ -98,7 +98,7 @@ class Candidate
         ballots.list.add(ballot);
   }
 
-  void remove_ballots(Indices indices)
+  void remove_ballots(List<Integer> indices)
   {
     ballots.remove_ballots(indices);
   }
@@ -207,14 +207,14 @@ class CandidateList
   // additionally serve to keep removing the losers from the 16 ballots (as
   // opposed to just removing the first element), so that the ballots will end
   // up with correct result: [9], [9, 6], [13, 4], [3, 2].
-  Indices min_vote_indices(int min_vote_count)
+  List<Integer> min_vote_indices(int min_vote_count)
   {
-    Indices indices = new Indices();
+    List<Integer> indices = new ArrayList<>();
     for (int i = 0; i < list.size(); i++)
     {
       // a candidate whose vote counts equals the minimum vote count
       if (list.get(i).ballots.list.size() == min_vote_count)
-        indices.list.add(i + 1);
+        indices.add(i + 1);
     }
     return indices;
   }
@@ -243,7 +243,7 @@ class CandidateList
     }
   }
 
-  void remove_ballots(Indices indices)
+  void remove_ballots(List<Integer> indices)
   {
     for (Candidate candidate : list)
       candidate.remove_ballots(indices);
@@ -259,11 +259,11 @@ class CandidateList
   // this method goes thru the current list of candidates to find those whose
   // ranking (position/index) matches the indices, collects and returns those
   // candidates
-  CandidateList losers(Indices losers_indices)
+  CandidateList losers(List<Integer> losers_indices)
   {
     CandidateList losers = new CandidateList();
     for (int i = 0; i < list.size(); i++)
-      for (int j : losers_indices.list)
+      for (int j : losers_indices)
         if (i+1 == j)
           losers.list.add(list.get(i));
     return losers;
@@ -284,24 +284,6 @@ class Poll
 
     builder.append(Integer.toString(ballots.list.size())).append(" ballots:\n");
     builder.append(ballots);
-    return builder.toString();
-  }
-}
-
-// this class represents a list of integer indices. its main purpose is for the
-// convenience of printing by way of method toString()
-class Indices
-{
-  List<Integer> list = new ArrayList<>();
-
-  public String toString()
-  {
-    StringBuilder builder = new StringBuilder();
-    builder.append("[");
-    for (int index : list)
-      builder.append(Integer.toString(index)).append(" ");
-    builder.deleteCharAt(builder.length()-1);
-    builder.append("]");
     return builder.toString();
   }
 }
@@ -355,7 +337,7 @@ class skiena_1_6_8
   {
     // obtain the position (index) of the candidates with the lowest number
     // of votes.
-    Indices losers_indices = candidates.min_vote_indices(vote_count);
+    List<Integer> losers_indices = candidates.min_vote_indices(vote_count);
     // System.out.println("Losers' indices: " + losers_indices);
     // collect all actual candidates with the lowest number of votes.
     CandidateList losers = candidates.losers(losers_indices);
@@ -424,7 +406,6 @@ class skiena_1_6_8
 
   public static void main(String[] args)
   {
-    List<Poll> list = input();
-    output(list);
+    output(input());
   }
 }

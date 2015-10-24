@@ -4,19 +4,9 @@ class Ballot
   # this constructor initializes the ballot with integers extracted from a string
   def initialize(line)
     @votes = []
-    tokens = line.split
-    tokens.each do |token|
+    line.split.each do |token|
       @votes << token.to_i
     end
-  end
-
-  def to_s
-    builder = "["
-    @votes.each do |number|
-      builder << number.to_s << " "
-    end
-    builder.chop!
-    builder << "]" << "\n"
   end
 
   # this method removes all votes that match the list of eliminated candidates
@@ -24,7 +14,7 @@ class Ballot
     # must use the following block construct to remove an element from List
     # while iterating over it.
     @votes.delete_if do |vote|
-      losers_indices.list.include?(vote)
+      losers_indices.include?(vote)
     end
   end
 end
@@ -39,7 +29,7 @@ class BallotList
   def to_s
     builder = ""
     @list.each do |ballot|
-      builder << " " << ballot.to_s
+      builder << " " << ballot.votes.to_s
     end
     builder
   end
@@ -120,22 +110,22 @@ class CandidateList
   def unisize
     # look for the first candidate with non-zero ballots
     i = 0
-    while (i < list.size && list[i].ballots.list.size == 0)
+    while (i < @list.size && @list[i].ballots.list.size == 0)
       i += 1
     end
     result = []
-    size = list[i].ballots.list.size
-    result << list[i]
+    size = @list[i].ballots.list.size
+    result << @list[i]
 
     # look in the rest of list of candidates
     (i+1).upto(list.size-1) do |j|
-      if (list[j].ballots.list.size != 0)
+      if (@list[j].ballots.list.size != 0)
         # if any candidate doesn't have the same size, return an empty list
-        if (list[j].ballots.list.size != size)
+        if (@list[j].ballots.list.size != size)
           return nil
         # if another candidate is of the same size, it is collected
         else
-          result << list[j]
+          result << @list[j]
         end
       end
     end
@@ -150,13 +140,12 @@ class CandidateList
     result = unisize
     # not all remaining candidates have the same size
     if (result == nil)
-      list.size.times do |i|
+      @list.size.times do |i|
         candidate = @list[i]
         # puts("Total ballots: #{ballot_count}, candidate: #{(i+1)}, ballot count: #{candidate.ballots.list.size}")
         # look for candidate with ballot count more than 50% of the total votes
         if (candidate.ballots.list.size / ballot_count.to_f >= 0.5)
-          result = []
-          result << candidate
+          result = [candidate]
           break
         end
       end
@@ -195,11 +184,11 @@ class CandidateList
   # opposed to just removing the first element), so that the ballots will end
   # up with correct result: [9], [9, 6], [13, 4], [3, 2].
   def min_vote_indices(min_vote_count)
-    indices = Indices.new
+    indices = []
     @list.each_index do |i|
       # a candidate whose vote counts equals the minimum vote count
       if (@list[i].ballots.list.size == min_vote_count)
-        indices.list << (i + 1)
+        indices << (i + 1)
       end
     end
     indices
@@ -247,9 +236,10 @@ class CandidateList
   def losers(losers_indices)
     losers = CandidateList.new
     @list.each_index do |i|
-      losers_indices.list.each do |j|
+      losers_indices.each do |j|
         if (i+1 == j)
-          losers.list << list[i]
+          losers.list << @list[i]
+          # puts("added #{@list[i]}")
         end
       end
     end
@@ -274,24 +264,6 @@ class Poll
 
     builder << @ballots.list.size.to_s << " ballots:\n"
     builder << @ballots.to_s
-  end
-end
-
-# this class represents a list of integer indices. its main purpose is for the
-# convenience of # printing by way of method toString()
-class Indices
-  attr_accessor :list
-
-  def initialize
-    @list = []
-  end
-
-  def to_s
-    builder = "["
-    @list.each do |index|
-      builder << index.to_s << " "
-    end
-    builder.chop << "]"
   end
 end
 
@@ -393,5 +365,4 @@ def output(list)
   end
 end
 
-list = input
-output(list)
+output(input())
